@@ -32,7 +32,7 @@ body {
     height: 500px;
     position: relative;
     transform-style: preserve-3d;
-    transition: transform 0.5s; /* Valor que faltaba */
+    transition: transform 0.5s;
 }
 
 .page {
@@ -77,69 +77,4 @@ body {
     letter-spacing: 2px;
     text-transform: uppercase;
     opacity: 0.6;
-}
-
-/* --- ESTILOS DEL JUEGO (ESTÉTICA BLACKPINK) --- */
-.game-page {
-    background: #000 !important;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-}
-
-.game-title {
-    color: var(--pink-accent);
-    text-shadow: 0 0 10px var(--pink-accent);
-    font-size: 0.9rem;
-    font-weight: bold;
-    margin-bottom: 10px;
-}
-
-#tetris-board {
-    display: grid;
-    grid-template-columns: repeat(7, 25px);
-    grid-template-rows: repeat(10, 25px);
-    gap: 1px;
-    background: #111;
-    border: 2px solid var(--pink-accent);
-}
-
-.cell {
-    width: 25px;
-    height: 25px;
-    background: #050505;
-    box-sizing: border-box;
-}
-
-.cell.filled {
-    background: var(--pink-accent);
-    box-shadow: 0 0 8px var(--pink-accent);
-}
-
-.cell.target {
-    border: 1px dashed rgba(255, 133, 161, 0.2);
-}
-
-.game-controls {
-    margin-top: 15px;
-    display: flex;
-    gap: 10px;
-}
-
-.game-controls button {
-    background: transparent;
-    border: 1px solid var(--pink-accent);
-    color: var(--pink-accent);
-    padding: 8px 12px;
-    cursor: pointer;
-    border-radius: 5px;
-    font-weight: bold;
-}
-
-#game-msg {
-    color: white;
-    font-size: 0.7rem;
-    margin-top: 10px;
-    height: 15px;
 }
