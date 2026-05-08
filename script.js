@@ -43,64 +43,58 @@ function playMusic(source) {
 }
 
 // Partículas estilo BLACKPINK: elegante, neon, suaves y con brillo
-particlesJS("particles-js", {
+
+            
+                particlesJS("particles-js", {
     particles: {
         number: {
-            value: 90,
+            value: 80,
             density: {
                 enable: true,
-                value_area: 900
+                value_area: 1000
             }
         },
         color: {
-            value: ["#ff4fd8", "#ff8bd6", "#ffffff", "#ff2ea6"]
+            value: ["#ff4fd8", "#ff8bd6", "#ffffff"]
         },
         shape: {
-            type: ["circle", "star"],
-            polygon: {
-                nb_sides: 5
-            }
+            type: ["circle", "star"]
         },
         opacity: {
-            value: 0.75,
+            value: 0.7,
             random: true,
             anim: {
                 enable: true,
-                speed: 0.8,
-                opacity_min: 0.2,
+                speed: 0.6,
+                opacity_min: 0.15,
                 sync: false
             }
         },
         size: {
-            value: 2.8,
+            value: 2.2,
             random: true,
             anim: {
                 enable: true,
-                speed: 2,
-                size_min: 0.4,
+                speed: 1.5,
+                size_min: 0.3,
                 sync: false
             }
         },
         line_linked: {
             enable: true,
-            distance: 130,
+            distance: 140,
             color: "#ff4fd8",
-            opacity: 0.18,
+            opacity: 0.14,
             width: 1
         },
         move: {
             enable: true,
-            speed: 0.9,
+            speed: 0.7,
             direction: "none",
             random: true,
             straight: false,
             out_mode: "out",
-            bounce: false,
-            attract: {
-                enable: true,
-                rotateX: 600,
-                rotateY: 1200
-            }
+            bounce: false
         }
     },
     interactivity: {
@@ -118,13 +112,13 @@ particlesJS("particles-js", {
         },
         modes: {
             repulse: {
-                distance: 120,
+                distance: 100,
                 duration: 0.4
             },
             push: {
-                particles_nb: 3
+                particles_nb: 2
             }
         }
     },
     retina_detect: true
-});
+}); 
