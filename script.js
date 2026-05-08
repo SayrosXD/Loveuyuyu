@@ -1,9 +1,9 @@
 const pages = document.querySelectorAll('.page');
 const audio = document.getElementById('bg-music');
 
-// --- NAVEGACIÓN PRECISA POR BORDES (CORREGIDA) ---
+// --- 1. NAVEGACIÓN CORREGIDA ---
 pages.forEach((page, index) => {
-    // Z-index inicial: las primeras páginas arriba
+    // Establecer z-index inicial
     page.style.zIndex = pages.length - index;
 
     page.addEventListener('click', (e) => {
@@ -11,10 +11,10 @@ pages.forEach((page, index) => {
         const x = e.clientX - rect.left;
         const width = rect.width;
 
-        // Borde derecho (20% final) -> Avanzar
+        // AVANZAR (Borde derecho)
         if (x > width * 0.8 && !page.classList.contains('flipped')) {
             page.classList.add('flipped');
-            // Al terminar la animación, bajamos el z-index para que no tape a las siguientes
+            // Bajamos el z-index después de la animación para no bloquear las de abajo
             setTimeout(() => { 
                 page.style.zIndex = index + 1; 
             }, 600);
@@ -22,12 +22,21 @@ pages.forEach((page, index) => {
             const nextSong = pages[index + 1]?.getAttribute('data-song');
             if (nextSong) playMusic(nextSong);
         } 
-        // Borde izquierdo (20% inicial) -> Retroceder
+        // RETROCEDER (Borde izquierdo)
         else if (x < width * 0.2 && page.classList.contains('flipped')) {
-            // Subimos el z-index antes de empezar a voltear para que se vea por encima
-            page.style.zIndex = pages.length - index;
+            // SUBIMOS el z-index inmediatamente para que se vea la animación de vuelta
+            page.style.zIndex = pages.length + index; 
             page.classList.remove('flipped');
             
+            // Re-ajustar z-index de las páginas siguientes para que el mazo se mantenga ordenado
+            setTimeout(() => {
+                pages.forEach((p, i) => {
+                    if (!p.classList.contains('flipped')) {
+                        p.style.zIndex = pages.length - i;
+                    }
+                });
+            }, 600);
+
             const currentSong = page.getAttribute('data-song');
             if (currentSong) playMusic(currentSong);
         }
@@ -37,24 +46,21 @@ pages.forEach((page, index) => {
 function playMusic(source) {
     if (!source || audio.src.includes(source)) return;
     audio.src = source;
-    audio.play().catch(() => console.log("Interacción requerida para audio"));
+    audio.play().catch(() => console.log("Interacción necesaria"));
 }
 
-// --- MOTOR DEL JUEGO TETRIS HEART (CON COLISIONES) ---
+// --- 2. MOTOR DEL JUEGO (COLISIONES REALES) ---
 const board = document.getElementById('tetris-board');
 const ROWS = 10; const COLS = 7;
 let grid = Array(ROWS).fill().map(() => Array(COLS).fill(0));
-let gameInterval;
 
-// Piezas variadas para poder rellenar el corazón con precisión
 const shapes = [
-    [[1]],          // Punto 1x1
-    [[1, 1]],       // Horizontal 1x2
-    [[1], [1]],     // Vertical 2x1
-    [[1, 1], [1, 1]] // Bloque 2x2
+    [[1]], 
+    [[1, 1]], 
+    [[1], [1]], 
+    [[1, 1], [1, 1]]
 ];
 
-// El patrón del corazón que queremos detectar
 const heartPattern = [
     [0,1,0,1,0],
     [1,1,1,1,1],
@@ -65,23 +71,19 @@ const heartPattern = [
 
 function spawnPiece() {
     const shape = shapes[Math.floor(Math.random() * shapes.length)];
-    return {
-        x: 3,
-        r: 0,
-        shape: shape
-    };
+    return { x: 3, r: 0, shape: shape };
 }
 
 let currentPiece = spawnPiece();
 
 function initBoard() {
+    if(!board) return;
     board.innerHTML = '';
     for (let r = 0; r < ROWS; r++) {
         for (let c = 0; c < COLS; c++) {
             const div = document.createElement('div');
             div.className = 'cell';
             div.id = `c-${r}-${c}`;
-            // Guía visual del corazón (zona r:3-7, c:1-5)
             if (r >= 3 && r < 8 && c >= 1 && c < 6) {
                 if (heartPattern[r-3][c-1]) div.classList.add('target');
             }
@@ -90,7 +92,6 @@ function initBoard() {
     }
 }
 
-// Validación de colisión (Paredes, Suelo y Bloques fijos)
 function isValidMove(nextR, nextX, nextShape) {
     for (let r = 0; r < nextShape.length; r++) {
         for (let c = 0; c < nextShape[r].length; c++) {
@@ -106,15 +107,11 @@ function isValidMove(nextR, nextX, nextShape) {
 }
 
 function draw() {
-    // Limpiar dibujo anterior
+    if(!board) return;
     document.querySelectorAll('.cell').forEach(c => c.classList.remove('filled'));
-    
-    // Dibujar bloques fijos en el grid
     grid.forEach((row, r) => row.forEach((val, c) => {
         if (val) document.getElementById(`c-${r}-${c}`).classList.add('filled');
     }));
-
-    // Dibujar pieza actual cayendo
     currentPiece.shape.forEach((row, r) => row.forEach((val, c) => {
         if (val) {
             let cell = document.getElementById(`c-${currentPiece.r + r}-${currentPiece.x + c}`);
@@ -127,21 +124,20 @@ function moveDown() {
     if (isValidMove(currentPiece.r + 1, currentPiece.x, currentPiece.shape)) {
         currentPiece.r++;
     } else {
-        // Fijar pieza
         currentPiece.shape.forEach((row, r) => row.forEach((val, c) => {
-            if (val && currentPiece.r + r >= 0) {
-                grid[currentPiece.r + r][currentPiece.x + c] = 1;
-            }
+            if (val && currentPiece.r + r >= 0) grid[currentPiece.r + r][currentPiece.x + c] = 1;
         }));
         checkWin();
         currentPiece = spawnPiece();
-        
-        // Si al aparecer choca, es Game Over
-        if (!isValidMove(currentPiece.r, currentPiece.x, currentPiece.shape)) {
-            resetGame();
-            document.getElementById('game-msg').innerText = "¡Casi! Inténtalo de nuevo";
-        }
+        if (!isValidMove(currentPiece.r, currentPiece.x, currentPiece.shape)) resetGame();
     }
+    draw();
+}
+
+function resetGame() {
+    grid = Array(ROWS).fill().map(() => Array(COLS).fill(0));
+    currentPiece = spawnPiece();
+    document.getElementById('game-msg').innerText = "¡Forma el corazón!";
     draw();
 }
 
@@ -152,66 +148,39 @@ function checkWin() {
             if (heartPattern[r-3][c-1] && !grid[r][c]) win = false;
         }
     }
-    if (win) {
-        document.getElementById('game-msg').innerText = "💖 ¡LO LOGRASTE! 💖";
-        document.getElementById('game-msg').style.color = "#ff85a1";
-    }
+    if (win) document.getElementById('game-msg').innerText = "💖 ¡LO LOGRASTE! 💖";
 }
 
-function resetGame() {
-    grid = Array(ROWS).fill().map(() => Array(COLS).fill(0));
-    currentPiece = spawnPiece();
-    document.getElementById('game-msg').innerText = "¡Forma el corazón!";
-    draw();
-}
-
-// --- EVENTOS DE CONTROL (CON STOPPROPAGATION) ---
+// --- CONTROLES ---
 document.getElementById('left-btn').onclick = (e) => { 
     e.stopPropagation(); 
-    if (isValidMove(currentPiece.r, currentPiece.x - 1, currentPiece.shape)) {
-        currentPiece.x--; draw(); 
-    }
+    if (isValidMove(currentPiece.r, currentPiece.x - 1, currentPiece.shape)) { currentPiece.x--; draw(); }
 };
-
 document.getElementById('right-btn').onclick = (e) => { 
     e.stopPropagation(); 
-    if (isValidMove(currentPiece.r, currentPiece.x + 1, currentPiece.shape)) {
-        currentPiece.x++; draw(); 
-    }
+    if (isValidMove(currentPiece.r, currentPiece.x + 1, currentPiece.shape)) { currentPiece.x++; draw(); }
 };
-
-document.getElementById('down-btn').onclick = (e) => { 
-    e.stopPropagation(); 
-    moveDown(); 
-};
-
+document.getElementById('down-btn').onclick = (e) => { e.stopPropagation(); moveDown(); };
 document.getElementById('rotate-btn').onclick = (e) => {
     e.stopPropagation();
-    // Rotar matriz 90 grados
     const newShape = currentPiece.shape[0].map((_, i) => currentPiece.shape.map(row => row[i]).reverse());
-    if (isValidMove(currentPiece.r, currentPiece.x, newShape)) {
-        currentPiece.shape = newShape;
-        draw();
-    }
+    if (isValidMove(currentPiece.r, currentPiece.x, newShape)) { currentPiece.shape = newShape; draw(); }
 };
+document.getElementById('reset-btn').onclick = (e) => { e.stopPropagation(); resetGame(); };
 
-document.getElementById('reset-btn').onclick = (e) => {
-    e.stopPropagation();
-    resetGame();
-};
-
-// Iniciar componentes
+// --- 3. INICIALIZACIÓN ---
 initBoard();
-gameInterval = setInterval(moveDown, 1000);
+setInterval(moveDown, 1000);
+draw(); // Dibujo inicial para evitar tablero vacío al cargar
 
-// --- PARTICULAS DE FONDO ---
-particlesJS("particles-js", {
-    "particles": {
-        "number": { "value": 100 },
-        "color": { "value": "#ffffff" },
-        "shape": { "type": "circle" },
-        "opacity": { "value": 0.5 },
-        "size": { "value": 1.5 },
-        "move": { "enable": true, "speed": 1 }
-    }
-});
+// --- 4. PARTICULAS (AL FINAL PARA EVITAR BLOQUEOS) ---
+if (typeof particlesJS !== 'undefined') {
+    particlesJS("particles-js", {
+        "particles": {
+            "number": { "value": 80 },
+            "color": { "value": "#ffffff" },
+            "size": { "value": 1.5 },
+            "move": { "enable": true, "speed": 1 }
+        }
+    });
+}
