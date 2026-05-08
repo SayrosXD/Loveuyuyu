@@ -8,13 +8,13 @@ pages.forEach((page, index) => {
         if (!page.classList.contains('flipped')) {
             page.classList.add('flipped');
             setTimeout(() => { page.style.zIndex = index + 1; }, 600);
-            
+
             const nextSong = pages[index + 1]?.getAttribute('data-song');
             playMusic(nextSong);
         } else {
             page.classList.remove('flipped');
             page.style.zIndex = pages.length - index;
-            
+
             const currentSong = page.getAttribute('data-song');
             playMusic(currentSong);
         }
@@ -22,39 +22,109 @@ pages.forEach((page, index) => {
 });
 
 function playMusic(source) {
-    // Si no hay atributo data-song o está vacío, detenemos la música y salimos
     if (!source || source === "") {
         audio.pause();
         return;
     }
 
-    // Si es la misma canción que ya está sonando, no hacemos nada
     if (audio.src.includes(source)) return;
 
     audio.src = source;
-    
-    // El método play() devuelve una promesa, la capturamos para evitar errores en consola
     const playPromise = audio.play();
 
     if (playPromise !== undefined) {
-        playPromise.then(_ => {
-            // Reproducción exitosa
+        playPromise.then(() => {
             console.log("Reproduciendo: " + source);
-        }).catch(error => {
-            // Si el archivo no existe o el navegador bloquea el autoplay, silenciamos el error
-            console.log("Aviso: No se pudo reproducir el audio (Archivo faltante o bloqueo de navegador).");
+        }).catch(() => {
+            console.log("Aviso: No se pudo reproducir el audio.");
             audio.pause();
         });
     }
 }
 
-// Configuración de fondo
+// Partículas estilo BLACKPINK: elegante, neon, suaves y con brillo
 particlesJS("particles-js", {
-    "particles": {
-        "number": { "value": 150 },
-        "color": { "value": "#ffffff" },
-        "size": { "value": 1.2, "random": true },
-        "opacity": { "value": 0.5, "random": true },
-        "move": { "enable": true, "speed": 0.5 }
-    }
+    particles: {
+        number: {
+            value: 90,
+            density: {
+                enable: true,
+                value_area: 900
+            }
+        },
+        color: {
+            value: ["#ff4fd8", "#ff8bd6", "#ffffff", "#ff2ea6"]
+        },
+        shape: {
+            type: ["circle", "star"],
+            polygon: {
+                nb_sides: 5
+            }
+        },
+        opacity: {
+            value: 0.75,
+            random: true,
+            anim: {
+                enable: true,
+                speed: 0.8,
+                opacity_min: 0.2,
+                sync: false
+            }
+        },
+        size: {
+            value: 2.8,
+            random: true,
+            anim: {
+                enable: true,
+                speed: 2,
+                size_min: 0.4,
+                sync: false
+            }
+        },
+        line_linked: {
+            enable: true,
+            distance: 130,
+            color: "#ff4fd8",
+            opacity: 0.18,
+            width: 1
+        },
+        move: {
+            enable: true,
+            speed: 0.9,
+            direction: "none",
+            random: true,
+            straight: false,
+            out_mode: "out",
+            bounce: false,
+            attract: {
+                enable: true,
+                rotateX: 600,
+                rotateY: 1200
+            }
+        }
+    },
+    interactivity: {
+        detect_on: "canvas",
+        events: {
+            onhover: {
+                enable: true,
+                mode: "repulse"
+            },
+            onclick: {
+                enable: true,
+                mode: "push"
+            },
+            resize: true
+        },
+        modes: {
+            repulse: {
+                distance: 120,
+                duration: 0.4
+            },
+            push: {
+                particles_nb: 3
+            }
+        }
+    },
+    retina_detect: true
 });
