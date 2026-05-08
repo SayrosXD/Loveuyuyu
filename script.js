@@ -1,44 +1,58 @@
+// --- 1. CONFIGURACIÓN DE PARTÍCULAS (AL PRINCIPIO) ---
+function initParticles() {
+    if (window.particlesJS) {
+        particlesJS("particles-js", {
+            "particles": {
+                "number": { "value": 80 },
+                "color": { "value": "#ffffff" },
+                "shape": { "type": "circle" },
+                "opacity": { "value": 0.5 },
+                "size": { "value": 1.5 },
+                "move": { "enable": true, "speed": 1 }
+            }
+        });
+    }
+}
+
 const pages = document.querySelectorAll('.page');
 const audio = document.getElementById('bg-music');
 
-// --- 1. NAVEGACIÓN CORREGIDA ---
+// --- 2. NAVEGACIÓN DEL LIBRO (LÓGICA MEJORADA) ---
 pages.forEach((page, index) => {
-    // Establecer z-index inicial
     page.style.zIndex = pages.length - index;
 
     page.addEventListener('click', (e) => {
+        // Si el clic viene de un botón del juego, NO pasar página
+        if (e.target.tagName === 'BUTTON') return;
+
         const rect = page.getBoundingClientRect();
         const x = e.clientX - rect.left;
         const width = rect.width;
 
-        // AVANZAR (Borde derecho)
-        if (x > width * 0.8 && !page.classList.contains('flipped')) {
+        // AVANZAR
+        if (x > width * 0.75 && !page.classList.contains('flipped')) {
             page.classList.add('flipped');
-            // Bajamos el z-index después de la animación para no bloquear las de abajo
             setTimeout(() => { 
                 page.style.zIndex = index + 1; 
-            }, 600);
-            
-            const nextSong = pages[index + 1]?.getAttribute('data-song');
-            if (nextSong) playMusic(nextSong);
+            }, 500);
+            playMusic(pages[index + 1]?.getAttribute('data-song'));
         } 
-        // RETROCEDER (Borde izquierdo)
-        else if (x < width * 0.2 && page.classList.contains('flipped')) {
-            // SUBIMOS el z-index inmediatamente para que se vea la animación de vuelta
-            page.style.zIndex = pages.length + index; 
+        // RETROCEDER
+        else if (x < width * 0.25 && page.classList.contains('flipped')) {
+            page.style.zIndex = pages.length + index; // Sube para que la animación se vea
             page.classList.remove('flipped');
             
-            // Re-ajustar z-index de las páginas siguientes para que el mazo se mantenga ordenado
+            // Re-organizar z-index al terminar la vuelta
             setTimeout(() => {
                 pages.forEach((p, i) => {
                     if (!p.classList.contains('flipped')) {
                         p.style.zIndex = pages.length - i;
                     }
                 });
-            }, 600);
-
+            }, 500);
+            
             const currentSong = page.getAttribute('data-song');
-            if (currentSong) playMusic(currentSong);
+            playMusic(currentSong);
         }
     });
 });
@@ -46,12 +60,14 @@ pages.forEach((page, index) => {
 function playMusic(source) {
     if (!source || audio.src.includes(source)) return;
     audio.src = source;
-    audio.play().catch(() => console.log("Interacción necesaria"));
+    audio.play().catch(err => console.log("Esperando interacción..."));
 }
 
-// --- 2. MOTOR DEL JUEGO (COLISIONES REALES) ---
+// --- 3. MOTOR DEL JUEGO (ESTRUCTURA ROBUSTA) ---
 const board = document.getElementById('tetris-board');
-const ROWS = 10; const COLS = 7;
+const msgDisplay = document.getElementById('game-msg');
+const ROWS = 10;
+const COLS = 7;
 let grid = Array(ROWS).fill().map(() => Array(COLS).fill(0));
 
 const shapes = [
@@ -69,21 +85,25 @@ const heartPattern = [
     [0,0,1,0,0]
 ];
 
-function spawnPiece() {
-    const shape = shapes[Math.floor(Math.random() * shapes.length)];
-    return { x: 3, r: 0, shape: shape };
-}
-
 let currentPiece = spawnPiece();
 
+function spawnPiece() {
+    return {
+        x: 2,
+        r: 0,
+        shape: shapes[Math.floor(Math.random() * shapes.length)]
+    };
+}
+
 function initBoard() {
-    if(!board) return;
+    if (!board) return;
     board.innerHTML = '';
     for (let r = 0; r < ROWS; r++) {
         for (let c = 0; c < COLS; c++) {
             const div = document.createElement('div');
             div.className = 'cell';
             div.id = `c-${r}-${c}`;
+            // Guía visual
             if (r >= 3 && r < 8 && c >= 1 && c < 6) {
                 if (heartPattern[r-3][c-1]) div.classList.add('target');
             }
@@ -92,7 +112,7 @@ function initBoard() {
     }
 }
 
-function isValidMove(nextR, nextX, nextShape) {
+function isValid(nextR, nextX, nextShape) {
     for (let r = 0; r < nextShape.length; r++) {
         for (let c = 0; c < nextShape[r].length; c++) {
             if (nextShape[r][c]) {
@@ -107,29 +127,40 @@ function isValidMove(nextR, nextX, nextShape) {
 }
 
 function draw() {
-    if(!board) return;
-    document.querySelectorAll('.cell').forEach(c => c.classList.remove('filled'));
+    if (!board) return;
+    // Limpiar
+    const cells = board.getElementsByClassName('cell');
+    for (let cell of cells) cell.classList.remove('filled');
+
+    // Grid fijo
     grid.forEach((row, r) => row.forEach((val, c) => {
         if (val) document.getElementById(`c-${r}-${c}`).classList.add('filled');
     }));
+
+    // Pieza móvil
     currentPiece.shape.forEach((row, r) => row.forEach((val, c) => {
         if (val) {
-            let cell = document.getElementById(`c-${currentPiece.r + r}-${currentPiece.x + c}`);
+            const cell = document.getElementById(`c-${currentPiece.r + r}-${currentPiece.x + c}`);
             if (cell) cell.classList.add('filled');
         }
     }));
 }
 
-function moveDown() {
-    if (isValidMove(currentPiece.r + 1, currentPiece.x, currentPiece.shape)) {
+function gameLoop() {
+    if (isValid(currentPiece.r + 1, currentPiece.x, currentPiece.shape)) {
         currentPiece.r++;
     } else {
+        // Colisión detectada: fijar pieza
         currentPiece.shape.forEach((row, r) => row.forEach((val, c) => {
-            if (val && currentPiece.r + r >= 0) grid[currentPiece.r + r][currentPiece.x + c] = 1;
+            if (val && currentPiece.r + r >= 0) {
+                grid[currentPiece.r + r][currentPiece.x + c] = 1;
+            }
         }));
         checkWin();
         currentPiece = spawnPiece();
-        if (!isValidMove(currentPiece.r, currentPiece.x, currentPiece.shape)) resetGame();
+        if (!isValid(currentPiece.r, currentPiece.x, currentPiece.shape)) {
+            resetGame();
+        }
     }
     draw();
 }
@@ -137,7 +168,7 @@ function moveDown() {
 function resetGame() {
     grid = Array(ROWS).fill().map(() => Array(COLS).fill(0));
     currentPiece = spawnPiece();
-    document.getElementById('game-msg').innerText = "¡Forma el corazón!";
+    if(msgDisplay) msgDisplay.innerText = "¡Forma el corazón!";
     draw();
 }
 
@@ -148,39 +179,49 @@ function checkWin() {
             if (heartPattern[r-3][c-1] && !grid[r][c]) win = false;
         }
     }
-    if (win) document.getElementById('game-msg').innerText = "💖 ¡LO LOGRASTE! 💖";
+    if (win && msgDisplay) {
+        msgDisplay.innerText = "💖 ¡LO LOGRASTE! 💖";
+        msgDisplay.style.color = "#ff85a1";
+    }
 }
 
-// --- CONTROLES ---
-document.getElementById('left-btn').onclick = (e) => { 
-    e.stopPropagation(); 
-    if (isValidMove(currentPiece.r, currentPiece.x - 1, currentPiece.shape)) { currentPiece.x--; draw(); }
-};
-document.getElementById('right-btn').onclick = (e) => { 
-    e.stopPropagation(); 
-    if (isValidMove(currentPiece.r, currentPiece.x + 1, currentPiece.shape)) { currentPiece.x++; draw(); }
-};
-document.getElementById('down-btn').onclick = (e) => { e.stopPropagation(); moveDown(); };
-document.getElementById('rotate-btn').onclick = (e) => {
+// --- 4. CONTROLES (CORREGIDOS) ---
+document.getElementById('left-btn').addEventListener('click', (e) => {
+    e.stopPropagation();
+    if (isValid(currentPiece.r, currentPiece.x - 1, currentPiece.shape)) {
+        currentPiece.x--; draw();
+    }
+});
+
+document.getElementById('right-btn').addEventListener('click', (e) => {
+    e.stopPropagation();
+    if (isValid(currentPiece.r, currentPiece.x + 1, currentPiece.shape)) {
+        currentPiece.x++; draw();
+    }
+});
+
+document.getElementById('rotate-btn').addEventListener('click', (e) => {
     e.stopPropagation();
     const newShape = currentPiece.shape[0].map((_, i) => currentPiece.shape.map(row => row[i]).reverse());
-    if (isValidMove(currentPiece.r, currentPiece.x, newShape)) { currentPiece.shape = newShape; draw(); }
+    if (isValid(currentPiece.r, currentPiece.x, newShape)) {
+        currentPiece.shape = newShape; draw();
+    }
+});
+
+document.getElementById('down-btn').addEventListener('click', (e) => {
+    e.stopPropagation();
+    gameLoop();
+});
+
+document.getElementById('reset-btn').addEventListener('click', (e) => {
+    e.stopPropagation();
+    resetGame();
+});
+
+// --- 5. INICIALIZACIÓN FINAL ---
+window.onload = () => {
+    initParticles();
+    initBoard();
+    setInterval(gameLoop, 1000);
+    draw();
 };
-document.getElementById('reset-btn').onclick = (e) => { e.stopPropagation(); resetGame(); };
-
-// --- 3. INICIALIZACIÓN ---
-initBoard();
-setInterval(moveDown, 1000);
-draw(); // Dibujo inicial para evitar tablero vacío al cargar
-
-// --- 4. PARTICULAS (AL FINAL PARA EVITAR BLOQUEOS) ---
-if (typeof particlesJS !== 'undefined') {
-    particlesJS("particles-js", {
-        "particles": {
-            "number": { "value": 80 },
-            "color": { "value": "#ffffff" },
-            "size": { "value": 1.5 },
-            "move": { "enable": true, "speed": 1 }
-        }
-    });
-}
