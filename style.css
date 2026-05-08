@@ -1,0 +1,81 @@
+:root {
+    --pink-accent: #ff85a1;
+    --dark-bg: #0a0a0a;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    background-color: var(--dark-bg);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    overflow: hidden;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+#particles-js {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+}
+
+.book-container {
+    perspective: 2000px;
+    z-index: 10;
+}
+
+.book {
+    width: 350px;
+    height: 500px;
+    position: relative;
+    transform-style: preserve-3d;
+    transition: transform 0.5s;
+}
+
+.page {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    transform-origin: left;
+    transform-style: preserve-3d;
+    transition: transform 1.2s cubic-bezier(0.645, 0.045, 0.355, 1);
+    cursor: pointer;
+}
+
+.front, .back {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    backface-visibility: hidden;
+    background-size: cover;
+    background-position: center;
+    border-radius: 0 10px 10px 0;
+    box-shadow: inset -5px 0 20px rgba(0,0,0,0.5);
+}
+
+.back {
+    background-color: #1a1a1a;
+    transform: rotateY(180deg);
+}
+
+.page.flipped {
+    transform: rotateY(-180deg);
+}
+
+.tap-hint {
+    position: absolute;
+    bottom: 20px;
+    width: 100%;
+    text-align: center;
+    color: white;
+    font-size: 0.8em;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    opacity: 0.6;
+}
+
