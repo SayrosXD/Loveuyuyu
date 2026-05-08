@@ -3,43 +3,36 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mi Álbum Digital</title>
+    <title>Para mi persona favorita</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-
     <div id="particles-js"></div>
 
     <div class="book-container">
         <div class="book" id="book">
-            <div class="page active" data-song="assets/music/pink_venom.mp3">
-                <div class="front" style="background-image: url('assets/images/portada.jpg');">
-                    <div class="tap-hint">Haz clic para abrir</div>
+            <div class="page active" data-song="assets/music/song1.mp3">
+                <div class="front" style="background-image: url('assets/images/inicio.png');">
+                    <div class="tap-hint">Tap to continue →</div>
                 </div>
                 <div class="back"></div>
             </div>
 
-            <div class="page" data-song="assets/music/how_you_like_that.mp3">
-                <div class="front" style="background-image: url('assets/images/pag1.jpg');"></div>
+            <div class="page" data-song="assets/music/song2.mp3">
+                <div class="front" style="background-image: url('assets/images/teamo(1).png');"></div>
                 <div class="back"></div>
             </div>
 
-            <div class="page" data-song="assets/music/lovesick_girls.mp3">
-                <div class="front" style="background-image: url('assets/images/pag2.jpg');"></div>
-                <div class="back"></div>
-            </div>
-            
-            <div class="page">
-                <div class="front" style="background-image: url('assets/images/final.jpg');"></div>
+            <div class="page" data-song="assets/music/song3.mp3">
+                <div class="front" style="background-image: url('assets/images/carta(2).png');"></div>
                 <div class="back"></div>
             </div>
         </div>
     </div>
 
-    <audio id="bg-music" loop></audio>
+    <audio id="bg-music" preload="auto"></audio>
 
     <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
     <script src="script.js"></script>
 </body>
 </html>
-
