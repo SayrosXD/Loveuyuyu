@@ -108,7 +108,6 @@ body::before {
     overflow: hidden;
 }
 
-/* efecto más premium en las páginas */
 .front {
     box-shadow:
         inset -8px 0 25px rgba(0, 0, 0, 0.55),
@@ -152,7 +151,6 @@ body::before {
     z-index: 20;
 }
 
-/* Opcional: brillo suave alrededor del libro */
 .book-container::before {
     content: "";
     position: absolute;
@@ -163,7 +161,6 @@ body::before {
     pointer-events: none;
 }
 
-/* Botón de traducción */
 .bp-translate-btn {
     position: fixed;
     bottom: 30px;
@@ -191,11 +188,8 @@ body::before {
     transform: scale(1.05);
 }
 
-.bp-translate-btn .icon {
-    font-size: 1.2rem;
-}
+.bp-translate-btn .icon { font-size: 1.2rem; }
 
-/* Estilo personalizado para la ventana de traducción */
 .bp-swal-popup {
     background: rgba(0, 0, 0, 0.95) !important;
     border: 2px solid #ff4fd8 !important;
@@ -203,6 +197,4 @@ body::before {
     border-radius: 20px !important;
 }
 
-.bp-swal-title {
-    color: #ff4fd8 !important;
-}
+.bp-swal-title { color: #ff4fd8 !important; }
