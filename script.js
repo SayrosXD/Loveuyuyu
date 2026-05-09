@@ -271,38 +271,45 @@ function desactivarTraduccionGlobal() {
     });
 }
 
-// --- 3. PARTICULAS VERSIÓN BLACKPINK LUXURY ---
+// --- 3. PARTICULAS VERSIÓN BLACKPINK ULTIMATE ---
 if (typeof particlesJS !== 'undefined') {
     particlesJS("particles-js", {
         "particles": {
-            "number": { "value": 100, "density": { "enable": true, "value_area": 800 } },
+            "number": { "value": 110, "density": { "enable": true, "value_area": 900 } },
             "color": {
+                // Paleta: Rosa BP, Blanco, Morado y Rosa suave
                 "value": ["#ff4fd8", "#ffffff", "#a855f7", "#ffb7ff"]
             },
             "shape": {
-                "type": ["circle", "star", "heart"],
-                "stroke": { "width": 0, "color": "#000000" }
+                // Ahora mezclamos Círculos, Estrellas e IMÁGENES (el corazón)
+                "type": ["circle", "star", "image"],
+                "image": {
+                    // SVG de corazón en base64 para que no necesites archivos extra
+                    "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj48cGF0aCBmaWxsPSIjZmY0ZmQ4IiBkPSJNNDcuNiAzMDAuNEwyMjguMyA0NjkuMWM3LjUgNyAxNy40IDEwLjkgMjcuNyAxMC45czIwLjItMy45IDI3LjctMTAuOUw0NjQuNCAzMDAuNEM0OTQuOCAyNzIuMSA1MTIgMjMyLjQgNTEyIDE5MC45di01LjhjMC02OS45LTUwLjUtMTI5LjUtMTE5LjQtMTQxQzM0NyAzNi41IDMwMC42IDUxLjQgMjY4IDg0TDI1NiA5NkwyNDQgODRjLTMyLjYtMzIuNi03OS00Ny41LTEyNC42LTM5LjlDNTAuNSA1NS42IDAgMTE1LjIgMCAxODUuMXY1LjhjMCA0MS41IDE3LjIgODEuMiA0Ny42IDEwOS41eiIvPjwvc3ZnPg==",
+                    "width": 100,
+                    "height": 100
+                }
             },
             "opacity": {
-                "value": 0.6,
+                "value": 0.7,
                 "random": true,
-                "anim": { "enable": true, "speed": 1, "opacity_min": 0.1, "sync": false }
+                "anim": { "enable": true, "speed": 1, "opacity_min": 0.2, "sync": false }
             },
             "size": {
-                "value": 3,
+                "value": 3.5,
                 "random": true,
-                "anim": { "enable": true, "speed": 2, "size_min": 0.5, "sync": false }
+                "anim": { "enable": true, "speed": 4, "size_min": 0.3, "sync": false }
             },
             "line_linked": {
                 "enable": true,
-                "distance": 130,
+                "distance": 120,
                 "color": "#ff4fd8",
-                "opacity": 0.2,
+                "opacity": 0.25,
                 "width": 1
             },
             "move": {
                 "enable": true,
-                "speed": 1.5,
+                "speed": 1.8,
                 "direction": "none",
                 "random": true,
                 "straight": false,
@@ -317,10 +324,42 @@ if (typeof particlesJS !== 'undefined') {
                 "onclick": { "enable": true, "mode": "push" }
             },
             "modes": {
-                "bubble": { "distance": 200, "size": 6, "duration": 2, "opacity": 0.8, "speed": 3 },
+                "bubble": { "distance": 200, "size": 8, "duration": 2, "opacity": 1, "speed": 3 },
                 "push": { "particles_nb": 4 }
             }
         },
         "retina_detect": true
     });
 }
+
+// --- ACTUALIZACIÓN DEL ANALIZADOR (Para el efecto "Latido") ---
+function actualizarParticulasConAudio() {
+    animationId = requestAnimationFrame(actualizarParticulasConAudio);
+    if (!analyser || !dataArray) return;
+
+    analyser.getByteFrequencyData(dataArray);
+
+    // Capturamos el "Punch" (bajos profundos)
+    let sumaBajos = 0;
+    for (let i = 0; i < 4; i++) sumaBajos += dataArray[i];
+    let promedioBajos = sumaBajos / 4;
+
+    // Suavizado dinámico
+    energiaSuave = energiaSuave * 0.85 + promedioBajos * 0.15;
+
+    const pJS = window.pJSDom && window.pJSDom[0] && window.pJSDom[0].pJS;
+    if (pJS && pJS.particles) {
+        // Velocidad: Reacciona al ritmo general
+        pJS.particles.move.speed = 1 + (energiaSuave / 15);
+        
+        // Tamaño: Las partículas "saltan" con el beat (efecto muy visual)
+        pJS.particles.size.value = 3 + (energiaSuave / 30);
+        
+        // Opacidad: Se vuelven más brillantes en los momentos intensos
+        pJS.particles.opacity.value = 0.4 + (energiaSuave / 200);
+        
+        // Color dinámico (Sutil): Las líneas se intensifican
+        pJS.particles.line_linked.opacity = 0.1 + (energiaSuave / 400);
+    }
+}
+ 
