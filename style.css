@@ -9,10 +9,7 @@
 
 * { box-sizing: border-box; }
 
-html, body {
-    width: 100%;
-    height: 100%;
-}
+html, body { width: 100%; height: 100%; }
 
 body {
     margin: 0;
@@ -32,8 +29,6 @@ body {
 #particle-canvas {
     position: fixed;
     inset: 0;
-    width: 100%;
-    height: 100%;
     z-index: 0;
     pointer-events: none;
 }
@@ -47,7 +42,6 @@ body {
     transition: opacity 1.5s ease;
 }
 
-/* El brillo que tenías alrededor del libro */
 .book-container::before {
     content: "";
     position: absolute;
@@ -58,19 +52,11 @@ body {
     pointer-events: none;
 }
 
-.book {
-    width: 100%;
-    height: 100%;
-    position: relative;
-    transform-style: preserve-3d;
-}
+.book { width: 100%; height: 100%; position: relative; transform-style: preserve-3d; }
 
 .page {
-    width: 100%;
-    height: 100%;
-    position: absolute;
-    top: 0;
-    left: 0;
+    width: 100%; height: 100%;
+    position: absolute; top: 0; left: 0;
     transform-origin: left;
     transform-style: preserve-3d;
     transition: transform 1.15s cubic-bezier(0.645, 0.045, 0.355, 1);
@@ -79,74 +65,44 @@ body {
 
 .front, .back {
     position: absolute;
-    width: 100%;
-    height: 100%;
+    width: 100%; height: 100%;
     backface-visibility: hidden;
     background-size: cover;
     background-position: center;
     border-radius: 0 14px 14px 0;
 }
 
-.front {
-    box-shadow: inset -8px 0 25px rgba(0, 0, 0, 0.55);
-}
-
-.back {
-    background-color: var(--card-bg);
-    transform: rotateY(180deg);
-    box-shadow: inset 8px 0 25px rgba(0, 0, 0, 0.55);
+.front { box-shadow: inset -8px 0 25px rgba(0, 0, 0, 0.55); }
+.back { 
+    background-color: var(--card-bg); 
+    transform: rotateY(180deg); 
+    box-shadow: inset 8px 0 25px rgba(0, 0, 0, 0.55); 
 }
 
 .page.flipped { transform: rotateY(-180deg); }
 
 .tap-hint {
-    position: absolute;
-    bottom: 20px;
-    width: 100%;
-    text-align: center;
-    color: rgba(255, 255, 255, 0.78);
-    font-size: 0.78em;
-    letter-spacing: 3px;
-    text-transform: uppercase;
+    position: absolute; bottom: 20px; width: 100%;
+    text-align: center; color: rgba(255, 255, 255, 0.78);
+    font-size: 0.78em; letter-spacing: 3px; text-transform: uppercase;
     text-shadow: 0 0 12px rgba(255, 79, 216, 0.35);
-    opacity: 0.75;
-    z-index: 20;
+    opacity: 0.75; z-index: 20;
 }
 
-/* MENSAJE FINAL */
 #final-message-container {
-    position: fixed;
-    z-index: 20;
-    text-align: center;
-    opacity: 0;
-    transition: opacity 3s ease;
-    pointer-events: none;
+    position: fixed; z-index: 20; text-align: center;
+    opacity: 0; transition: opacity 3s ease; pointer-events: none;
 }
 #final-message-container.show { opacity: 1; }
 
-.final-text {
-    color: white;
-    font-size: 1.5rem;
-    text-shadow: 0 0 15px var(--pink-accent);
-}
-.final-text span {
-    color: var(--pink-accent);
-    font-size: 3.5rem;
-    display: block;
-    font-weight: bold;
-}
+.final-text { color: white; font-size: 1.5rem; text-shadow: 0 0 15px var(--pink-accent); }
+.final-text span { color: var(--pink-accent); font-size: 3.5rem; display: block; font-weight: bold; }
 
 .bp-translate-btn {
-    position: fixed;
-    bottom: 30px;
-    right: 30px;
-    background: rgba(0, 0, 0, 0.8);
-    color: #ff4fd8;
-    border: 2px solid #ff4fd8;
-    padding: 12px 20px;
-    border-radius: 50px;
-    cursor: pointer;
-    z-index: 9999;
+    position: fixed; bottom: 30px; right: 30px;
+    background: rgba(0, 0, 0, 0.8); color: #ff4fd8;
+    border: 2px solid #ff4fd8; padding: 12px 20px;
+    border-radius: 50px; cursor: pointer; z-index: 9999;
+    font-family: 'Arial', sans-serif; font-weight: bold;
 }
-
 .hidden { display: none !important; }
