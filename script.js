@@ -1,8 +1,11 @@
-const pages = document.querySelectorAll('.page');
+const pages = [...document.querySelectorAll('.page')];
+const book = document.querySelector('.book');
 const audio = document.getElementById('bg-music');
 const btnTranslate = document.getElementById('btn-translate');
+
 let modoTraduccion = false;
 let cargandoTraduccion = false;
+let paginaActual = 0;
 
 // Array con los nombres originales exactos para la restauración
 const originalImages = [
@@ -32,6 +35,21 @@ window.addEventListener('load', () => {
 });
 
 // --- 1. NAVEGACIÓN Y AUDIO ---
+function playMusic(source) {
+    if (!source || audio.src.includes(source)) return;
+    audio.src = source;
+    audio.loop = true;
+    audio.play().catch(() => console.log("Audio en espera"));
+}
+
+function actualizarZIndex() {
+    pages.forEach((page, i) => {
+        page.style.zIndex = page.classList.contains('flipped')
+            ? i + 1
+            : pages.length - i;
+    });
+}
+
 function volverPagina(pageToBack, pageIndex) {
     if (modoTraduccion) desactivarTraduccionGlobal();
     pageToBack.classList.remove('flipped');
@@ -41,41 +59,48 @@ function volverPagina(pageToBack, pageIndex) {
     if (currentSong) playMusic(currentSong);
 }
 
-pages.forEach((page, index) => {
-    page.style.zIndex = pages.length - index;
+function avanzarPagina() {
+    if (paginaActual >= pages.length) return;
 
-    page.addEventListener('click', (e) => {
-        if (e.target.closest('#btn-translate')) return;
+    const page = pages[paginaActual];
 
-        const rect = page.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const width = rect.width;
+    if (modoTraduccion) desactivarTraduccionGlobal();
+    page.classList.add('flipped');
+    paginaActual++;
+    actualizarZIndex();
 
-        if (x > width * 0.7 && !page.classList.contains('flipped')) {
-            if (modoTraduccion) desactivarTraduccionGlobal();
-            page.classList.add('flipped');
-            setTimeout(() => { page.style.zIndex = index + 1; }, 600);
+    const nextSong = pages[paginaActual]?.getAttribute('data-song');
+    if (nextSong) playMusic(nextSong);
+}
 
-            const nextSong = pages[index + 1]?.getAttribute('data-song');
-            if (nextSong) playMusic(nextSong);
-        } 
-        else if (x < width * 0.3) {
-            if (page.classList.contains('flipped')) {
-                volverPagina(page, index);
-            } 
-            else if (index > 0 && pages[index - 1].classList.contains('flipped')) {
-                volverPagina(pages[index - 1], index - 1);
-            }
-        }
-    });
+function retrocederPagina() {
+    if (paginaActual <= 0) return;
+
+    paginaActual--;
+    const page = pages[paginaActual];
+
+    if (modoTraduccion) desactivarTraduccionGlobal();
+    page.classList.remove('flipped');
+    actualizarZIndex();
+
+    const currentSong = page.getAttribute('data-song');
+    if (currentSong) playMusic(currentSong);
+}
+
+book.addEventListener('click', (e) => {
+    if (e.target.closest('#btn-translate')) return;
+
+    const rect = book.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+
+    if (x > rect.width / 2) {
+        avanzarPagina();
+    } else {
+        retrocederPagina();
+    }
 });
 
-function playMusic(source) {
-    if (!source || audio.src.includes(source)) return;
-    audio.src = source;
-    audio.loop = true;
-    audio.play().catch(() => console.log("Audio en espera"));
-}
+actualizarZIndex();
 
 // --- 2. SISTEMA DE TRADUCCIÓN DINÁMICO ---
 btnTranslate.addEventListener('click', async (e) => {
@@ -84,7 +109,7 @@ btnTranslate.addEventListener('click', async (e) => {
 
     if (cargandoTraduccion) return;
 
-    const pageActiva = Array.from(pages).find(p => !p.classList.contains('flipped'));
+    const pageActiva = pages[paginaActual] || Array.from(pages).find(p => !p.classList.contains('flipped'));
     if (!pageActiva) return;
 
     const indexPage = Array.from(pages).indexOf(pageActiva);
