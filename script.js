@@ -32,6 +32,15 @@ window.addEventListener('load', () => {
 });
 
 // --- 1. NAVEGACIÓN Y AUDIO ---
+function volverPagina(pageToBack, pageIndex) {
+    if (modoTraduccion) desactivarTraduccionGlobal();
+    pageToBack.classList.remove('flipped');
+    pageToBack.style.zIndex = pages.length - pageIndex;
+
+    const currentSong = pageToBack.getAttribute('data-song');
+    if (currentSong) playMusic(currentSong);
+}
+
 pages.forEach((page, index) => {
     page.style.zIndex = pages.length - index;
 
@@ -46,15 +55,17 @@ pages.forEach((page, index) => {
             if (modoTraduccion) desactivarTraduccionGlobal();
             page.classList.add('flipped');
             setTimeout(() => { page.style.zIndex = index + 1; }, 600);
+
             const nextSong = pages[index + 1]?.getAttribute('data-song');
             if (nextSong) playMusic(nextSong);
         } 
-        else if (x < width * 0.3 && page.classList.contains('flipped')) {
-            if (modoTraduccion) desactivarTraduccionGlobal();
-            page.classList.remove('flipped');
-            page.style.zIndex = pages.length - index;
-            const currentSong = page.getAttribute('data-song');
-            if (currentSong) playMusic(currentSong);
+        else if (x < width * 0.3) {
+            if (page.classList.contains('flipped')) {
+                volverPagina(page, index);
+            } 
+            else if (index > 0 && pages[index - 1].classList.contains('flipped')) {
+                volverPagina(pages[index - 1], index - 1);
+            }
         }
     });
 });
