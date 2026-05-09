@@ -20,9 +20,11 @@ body {
     margin: 0;
     padding: 0;
     background:
-        radial-gradient(circle at top, rgba(255, 79, 216, 0.12), transparent 30%),
-        radial-gradient(circle at bottom, rgba(255, 46, 166, 0.08), transparent 35%),
-        linear-gradient(135deg, #040404 0%, #090909 45%, #120610 100%);
+        radial-gradient(circle at 50% 18%, rgba(255, 79, 216, 0.14), transparent 26%),
+        radial-gradient(circle at 15% 25%, rgba(255, 255, 255, 0.05), transparent 18%),
+        radial-gradient(circle at 85% 30%, rgba(211, 107, 255, 0.08), transparent 20%),
+        radial-gradient(circle at 50% 90%, rgba(255, 46, 166, 0.06), transparent 30%),
+        linear-gradient(135deg, #020202 0%, #080808 42%, #140711 100%);
     display: flex;
     justify-content: center;
     align-items: center;
@@ -32,7 +34,6 @@ body {
     position: relative;
 }
 
-/* Fondo de partículas */
 #particles-js {
     position: fixed;
     inset: 0;
@@ -41,50 +42,49 @@ body {
     z-index: 0;
     pointer-events: none;
     overflow: hidden;
-    filter: drop-shadow(0 0 8px rgba(255, 79, 216, 0.18));
+    filter: drop-shadow(0 0 10px rgba(255, 79, 216, 0.28)) blur(0.2px);
     background:
-        radial-gradient(circle at 20% 20%, rgba(255, 79, 216, 0.08), transparent 22%),
-        radial-gradient(circle at 80% 30%, rgba(255, 255, 255, 0.05), transparent 18%),
-        radial-gradient(circle at 50% 80%, rgba(211, 107, 255, 0.06), transparent 25%);
+        radial-gradient(circle at 50% 50%, rgba(255, 79, 216, 0.08), transparent 35%),
+        radial-gradient(circle at 50% 25%, rgba(255, 255, 255, 0.04), transparent 18%),
+        linear-gradient(180deg, rgba(0,0,0,0.15), rgba(0,0,0,0.35));
 }
 
-/* Estrellas extra para dar más “vibe” */
 #particles-js::before,
 #particles-js::after {
     content: "";
     position: absolute;
-    inset: -20%;
+    inset: -25%;
     pointer-events: none;
     mix-blend-mode: screen;
 }
 
 #particles-js::before {
     background-image:
-        radial-gradient(circle, rgba(255,255,255,0.95) 0 1px, transparent 1.6px),
-        radial-gradient(circle, rgba(255,79,216,0.95) 0 1.25px, transparent 2px);
-    background-size: 72px 72px, 140px 140px;
-    opacity: 0.5;
-    filter: drop-shadow(0 0 6px rgba(255, 79, 216, 0.35));
-    animation: starDrift 18s linear infinite;
+        radial-gradient(circle, rgba(255,255,255,0.95) 0 1px, transparent 1.5px),
+        radial-gradient(circle, rgba(255,79,216,0.95) 0 1.1px, transparent 1.9px),
+        radial-gradient(circle, rgba(255,139,214,0.8) 0 0.9px, transparent 1.6px);
+    background-size: 68px 68px, 120px 120px, 180px 180px;
+    opacity: 0.48;
+    filter: drop-shadow(0 0 7px rgba(255, 79, 216, 0.45));
+    animation: starDrift 20s linear infinite;
 }
 
 #particles-js::after {
     background-image:
-        radial-gradient(circle, rgba(255,255,255,0.7) 0 0.8px, transparent 1.3px);
-    background-size: 110px 110px;
-    opacity: 0.28;
-    animation: starDrift 28s linear infinite reverse;
+        radial-gradient(circle, rgba(255,255,255,0.75) 0 0.8px, transparent 1.3px);
+    background-size: 105px 105px;
+    opacity: 0.25;
+    animation: starDrift 30s linear infinite reverse;
 }
 
-/* Capa sutil para dar más profundidad */
 body::before {
     content: "";
     position: fixed;
     inset: 0;
     z-index: 0;
     background:
-        radial-gradient(circle at 50% 20%, rgba(255, 255, 255, 0.05), transparent 25%),
-        radial-gradient(circle at 50% 80%, rgba(255, 79, 216, 0.08), transparent 30%);
+        radial-gradient(circle at 50% 22%, rgba(255, 255, 255, 0.05), transparent 20%),
+        radial-gradient(circle at 50% 78%, rgba(255, 79, 216, 0.08), transparent 28%);
     pointer-events: none;
 }
 
@@ -100,7 +100,7 @@ body::before {
     position: relative;
     transform-style: preserve-3d;
     transition: transform 0.5s ease;
-    filter: drop-shadow(0 20px 45px rgba(0, 0, 0, 0.65));
+    filter: drop-shadow(0 20px 45px rgba(0, 0, 0, 0.68));
 }
 
 .page {
@@ -126,10 +126,9 @@ body::before {
     overflow: hidden;
 }
 
-/* efecto más premium en las páginas */
 .front {
     box-shadow:
-        inset -8px 0 25px rgba(0, 0, 0, 0.55),
+        inset -8px 0 25px rgba(0, 0, 0, 0.58),
         inset 0 0 0 1px rgba(255, 255, 255, 0.08);
 }
 
@@ -139,8 +138,8 @@ body::before {
     position: absolute;
     inset: 0;
     background:
-        linear-gradient(120deg, rgba(255,255,255,0.14), transparent 35%),
-        linear-gradient(180deg, rgba(0,0,0,0.05), rgba(0,0,0,0.28));
+        linear-gradient(120deg, rgba(255,255,255,0.12), transparent 34%),
+        linear-gradient(180deg, rgba(0,0,0,0.03), rgba(0,0,0,0.32));
     pointer-events: none;
 }
 
@@ -170,24 +169,24 @@ body::before {
     z-index: 20;
 }
 
-/* brillo suave alrededor del libro */
 .book-container::before {
     content: "";
     position: absolute;
-    inset: -30px;
+    inset: -34px;
     z-index: -1;
-    background: radial-gradient(circle, rgba(255, 79, 216, 0.18), transparent 60%);
-    filter: blur(20px);
+    background:
+        radial-gradient(circle, rgba(255, 79, 216, 0.20), transparent 58%),
+        radial-gradient(circle, rgba(255, 255, 255, 0.05), transparent 65%);
+    filter: blur(22px);
     pointer-events: none;
-    animation: pulseGlow 5s ease-in-out infinite;
+    animation: pulseGlow 4.8s ease-in-out infinite;
 }
 
-/* Botón de traducción */
 .bp-translate-btn {
     position: fixed;
     bottom: 30px;
     right: 30px;
-    background: rgba(0, 0, 0, 0.8);
+    background: rgba(0, 0, 0, 0.82);
     color: #ff4fd8;
     border: 2px solid #ff4fd8;
     padding: 12px 20px;
@@ -206,7 +205,7 @@ body::before {
 .bp-translate-btn:hover {
     background: #ff4fd8;
     color: #000;
-    box-shadow: 0 0 25px rgba(255, 79, 216, 0.8);
+    box-shadow: 0 0 25px rgba(255, 79, 216, 0.82);
     transform: scale(1.05);
 }
 
@@ -214,7 +213,6 @@ body::before {
     font-size: 1.2rem;
 }
 
-/* Estilo personalizado para la ventana de traducción */
 .bp-swal-popup {
     background: rgba(0, 0, 0, 0.95) !important;
     border: 2px solid #ff4fd8 !important;
@@ -237,11 +235,11 @@ body::before {
 
 @keyframes pulseGlow {
     0%, 100% {
-        opacity: 0.65;
+        opacity: 0.55;
         transform: scale(1);
     }
     50% {
         opacity: 1;
-        transform: scale(1.03);
+        transform: scale(1.04);
     }
 }
