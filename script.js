@@ -5,11 +5,10 @@ const audio = document.getElementById('bg-music');
 const btnTranslate = document.getElementById('btn-translate');
 
 let modoTraduccion = false;
-let cargandoTraduccion = false;
 let paginaActual = 0;
 
 /* =========================
-   AUDIO VISUALIZER & STATE
+   AUDIO VISUALIZER (Tu lógica original)
    ========================= */
 let audioContext = null;
 let analyser = null;
@@ -18,7 +17,7 @@ let mediaSource = null;
 let energiaSuave = 0;
 let animationId = null;
 
-// Para el Canvas manual del final
+// Sistema para el corazón final
 let particlesFinal = [];
 let isHeartMode = false;
 let pulseFactor = 1;
@@ -31,38 +30,36 @@ const originalImages = [
 
 // --- 1. INICIALIZACIÓN DE PARTICULAS (Tus valores originales) ---
 function initParticles() {
-    if (typeof particlesJS !== 'undefined') {
-        particlesJS("particles-js", {
-            "particles": {
-                "number": { "value": 50, "density": { "enable": true, "value_area": 800 } },
-                "color": { "value": "#ff4fd8" },
-                "shape": { "type": "circle" },
-                "opacity": { "value": 0.5, "random": true },
-                "size": { "value": 3, "random": true },
-                "line_linked": {
-                    "enable": true,
-                    "distance": 150,
-                    "color": "#ff4fd8",
-                    "opacity": 0.4,
-                    "width": 1
-                },
-                "move": {
-                    "enable": true,
-                    "speed": 1.2,
-                    "direction": "none",
-                    "random": true,
-                    "straight": false,
-                    "out_mode": "out",
-                    "bounce": false
-                }
+    particlesJS("particles-js", {
+        "particles": {
+            "number": { "value": 50, "density": { "enable": true, "value_area": 800 } },
+            "color": { "value": "#ff4fd8" },
+            "shape": { "type": "circle" },
+            "opacity": { "value": 0.5, "random": true },
+            "size": { "value": 3, "random": true },
+            "line_linked": {
+                "enable": true,
+                "distance": 150,
+                "color": "#ff4fd8",
+                "opacity": 0.4,
+                "width": 1
             },
-            "interactivity": {
-                "detect_on": "canvas",
-                "events": { "onhover": { "enable": false }, "onclick": { "enable": true, "mode": "push" } }
-            },
-            "retina_detect": true
-        });
-    }
+            "move": {
+                "enable": true,
+                "speed": 1.2,
+                "direction": "none",
+                "random": true,
+                "straight": false,
+                "out_mode": "out",
+                "bounce": false
+            }
+        },
+        "interactivity": {
+            "detect_on": "canvas",
+            "events": { "onhover": { "enable": false }, "onclick": { "enable": true, "mode": "push" } }
+        },
+        "retina_detect": true
+    });
 }
 
 // --- 2. ACTUALIZACIÓN CON AUDIO (Tus valores originales) ---
@@ -82,14 +79,18 @@ function actualizarParticulasConAudio() {
     }
 }
 
-// --- 3. LÓGICA DE TRADUCCIÓN ---
+// --- 3. TRADUCCIÓN (Corregida para que funcione siempre) ---
 btnTranslate.addEventListener('click', () => {
+    // Determinamos qué página está al frente
     const currentIdx = Math.min(paginaActual, originalImages.length - 1);
     const frontSide = pages[currentIdx].querySelector('.front');
     
     if (!modoTraduccion) {
         let originalName = originalImages[currentIdx];
-        let tradName = originalName.replace(".png", "_traduccion.png").replace(/\(\d+\)/, "");
+        // Limpiamos el nombre para buscar la traducción (ej: lisa(3).png -> lisa_traduccion.png)
+        let tradName = originalName.replace(/\(\d+\)/, "").replace(".png", "_traduccion.png");
+        
+        // Ajuste manual por si las carpetas difieren
         frontSide.style.backgroundImage = `url('assets/images/traduccion/${tradName}')`;
         btnTranslate.querySelector('.text').innerText = "Ver Original";
         modoTraduccion = true;
@@ -100,8 +101,9 @@ btnTranslate.addEventListener('click', () => {
     }
 });
 
-// --- 4. NAVEGACIÓN DEL LIBRO ---
+// --- 4. NAVEGACIÓN ---
 function cambiarPagina(dir) {
+    // Resetear estado de traducción al mover la hoja
     modoTraduccion = false;
     btnTranslate.querySelector('.text').innerText = "Traducir página";
 
@@ -142,17 +144,18 @@ function actualizarZIndex() {
     });
 }
 
-// --- 5. ESCENA FINAL (CANVAS MANUAL) ---
+// --- 5. CANVAS FINAL (Se agrega al final sin dañar lo anterior) ---
 function activarEscenaFinal() {
     isHeartMode = true;
+    bookContainer.style.transition = "opacity 1.5s";
     bookContainer.style.opacity = "0";
     btnTranslate.style.display = "none";
 
     setTimeout(() => {
         bookContainer.style.display = "none";
-        // Ocultamos el canvas de particles.js
+        // Ocultar las partículas viejas suavemente
         const oldCanvas = document.querySelector('#particles-js canvas');
-        if (oldCanvas) oldCanvas.style.display = "none";
+        if (oldCanvas) oldCanvas.style.opacity = "0";
 
         iniciarCanvasCorazon();
         
@@ -167,6 +170,10 @@ function activarEscenaFinal() {
 function iniciarCanvasCorazon() {
     const canvas = document.createElement('canvas');
     canvas.id = 'final-canvas';
+    canvas.style.position = 'fixed';
+    canvas.style.top = '0';
+    canvas.style.left = '0';
+    canvas.style.zIndex = '10';
     document.body.appendChild(canvas);
     const ctx = canvas.getContext('2d');
 
@@ -200,7 +207,6 @@ function iniciarCanvasCorazon() {
         }
     }
 
-    // Generar puntos de corazón
     for (let i = 0; i < 180; i++) {
         let t = (i / 180) * Math.PI * 2;
         let x = 16 * Math.pow(Math.sin(t), 3);
@@ -218,12 +224,12 @@ function iniciarCanvasCorazon() {
     animFinal();
 }
 
-// Listeners iniciales
 bookContainer.addEventListener('click', (e) => {
     const rect = bookContainer.getBoundingClientRect();
     if (e.clientX - rect.left > rect.width / 2) cambiarPagina('adelante');
     else cambiarPagina('atras');
 });
 
+// Ejecución inicial
 initParticles();
 actualizarZIndex();
