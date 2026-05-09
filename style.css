@@ -2,51 +2,38 @@
     --pink-accent: #ff4fd8;
     --pink-deep: #ff2ea6;
     --dark-bg: #050505;
-    --text-light: #ffffff;
 }
 
-* { box-sizing: border-box; }
-
 body, html {
-    margin: 0;
-    padding: 0;
-    width: 100%;
-    height: 100%;
+    margin: 0; padding: 0;
+    width: 100%; height: 100%;
     overflow: hidden;
-    background-color: var(--dark-bg);
-    display: flex;
-    justify-content: center;
-    align-items: center;
+    background: radial-gradient(circle at center, #120610 0%, #050505 100%);
+    display: flex; justify-content: center; align-items: center;
     font-family: 'Segoe UI', sans-serif;
 }
 
 #particle-canvas {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
+    position: fixed; inset: 0;
     z-index: 1;
 }
 
-/* CONTENEDOR DEL LIBRO */
 .book-container {
     position: relative;
     z-index: 10;
     perspective: 2000px;
-    transition: opacity 2s ease;
+    width: 350px; height: 500px;
+    transition: opacity 1.5s ease;
 }
 
 .book {
-    width: 350px;
-    height: 500px;
+    width: 100%; height: 100%;
     position: relative;
     transform-style: preserve-3d;
 }
 
 .page {
-    width: 100%;
-    height: 100%;
+    width: 100%; height: 100%;
     position: absolute;
     transform-origin: left;
     transform-style: preserve-3d;
@@ -56,69 +43,29 @@ body, html {
 
 .front, .back {
     position: absolute;
-    width: 100%;
-    height: 100%;
+    width: 100%; height: 100%;
     backface-visibility: hidden;
     background-size: cover;
     border-radius: 0 15px 15px 0;
-    box-shadow: inset -5px 0 20px rgba(0,0,0,0.4);
+    box-shadow: inset -5px 0 20px rgba(0,0,0,0.5);
 }
 
-.back {
-    background: #111;
-    transform: rotateY(180deg);
-}
-
+.back { background: #111; transform: rotateY(180deg); }
 .page.flipped { transform: rotateY(-180deg); }
 
-/* MENSAJE FINAL */
 #final-message-container {
-    position: fixed;
-    z-index: 20;
-    text-align: center;
-    pointer-events: none;
-    opacity: 0;
-    transition: opacity 3s ease;
+    position: fixed; z-index: 20; text-align: center;
+    opacity: 0; transition: opacity 3s ease; pointer-events: none;
 }
-
 #final-message-container.show { opacity: 1; }
 
-.final-text {
-    color: white;
-    font-size: 1.5rem;
-    text-shadow: 0 0 15px var(--pink-accent);
-}
+.final-text { color: white; font-size: 1.5rem; text-shadow: 0 0 15px var(--pink-accent); }
+.final-text span { color: var(--pink-accent); font-size: 3.5rem; display: block; font-weight: bold; }
 
-.final-text span {
-    color: var(--pink-accent);
-    font-size: 3.5rem;
-    display: block;
-    font-weight: bold;
-    letter-spacing: 2px;
-}
-
-/* TRADUCTOR */
 .bp-translate-btn {
-    position: fixed;
-    bottom: 30px;
-    right: 30px;
-    background: rgba(0, 0, 0, 0.8);
-    color: var(--pink-accent);
-    border: 2px solid var(--pink-accent);
-    padding: 12px 22px;
-    border-radius: 50px;
-    cursor: pointer;
-    z-index: 100;
+    position: fixed; bottom: 30px; right: 30px;
+    background: rgba(0,0,0,0.8); color: var(--pink-accent);
+    border: 2px solid var(--pink-accent); padding: 12px 20px;
+    border-radius: 50px; cursor: pointer; z-index: 100;
 }
-
-.tap-hint {
-    position: absolute;
-    bottom: 20px;
-    width: 100%;
-    text-align: center;
-    color: white;
-    opacity: 0.6;
-    font-size: 0.8rem;
-}
-
 .hidden { display: none !important; }
