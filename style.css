@@ -29,6 +29,7 @@ body {
     overflow: hidden;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     color: var(--text-light);
+    position: relative;
 }
 
 /* Fondo de partículas */
@@ -39,7 +40,40 @@ body {
     height: 100%;
     z-index: 0;
     pointer-events: none;
+    overflow: hidden;
     filter: drop-shadow(0 0 8px rgba(255, 79, 216, 0.18));
+    background:
+        radial-gradient(circle at 20% 20%, rgba(255, 79, 216, 0.08), transparent 22%),
+        radial-gradient(circle at 80% 30%, rgba(255, 255, 255, 0.05), transparent 18%),
+        radial-gradient(circle at 50% 80%, rgba(211, 107, 255, 0.06), transparent 25%);
+}
+
+/* Estrellas extra para dar más “vibe” */
+#particles-js::before,
+#particles-js::after {
+    content: "";
+    position: absolute;
+    inset: -20%;
+    pointer-events: none;
+    mix-blend-mode: screen;
+}
+
+#particles-js::before {
+    background-image:
+        radial-gradient(circle, rgba(255,255,255,0.95) 0 1px, transparent 1.6px),
+        radial-gradient(circle, rgba(255,79,216,0.95) 0 1.25px, transparent 2px);
+    background-size: 72px 72px, 140px 140px;
+    opacity: 0.5;
+    filter: drop-shadow(0 0 6px rgba(255, 79, 216, 0.35));
+    animation: starDrift 18s linear infinite;
+}
+
+#particles-js::after {
+    background-image:
+        radial-gradient(circle, rgba(255,255,255,0.7) 0 0.8px, transparent 1.3px);
+    background-size: 110px 110px;
+    opacity: 0.28;
+    animation: starDrift 28s linear infinite reverse;
 }
 
 /* Capa sutil para dar más profundidad */
@@ -136,7 +170,7 @@ body::before {
     z-index: 20;
 }
 
-/* Opcional: brillo suave alrededor del libro */
+/* brillo suave alrededor del libro */
 .book-container::before {
     content: "";
     position: absolute;
@@ -145,6 +179,7 @@ body::before {
     background: radial-gradient(circle, rgba(255, 79, 216, 0.18), transparent 60%);
     filter: blur(20px);
     pointer-events: none;
+    animation: pulseGlow 5s ease-in-out infinite;
 }
 
 /* Botón de traducción */
@@ -189,4 +224,24 @@ body::before {
 
 .bp-swal-title {
     color: #ff4fd8 !important;
+}
+
+@keyframes starDrift {
+    from {
+        transform: translate3d(0, 0, 0) rotate(0deg);
+    }
+    to {
+        transform: translate3d(0, -8%, 0) rotate(4deg);
+    }
+}
+
+@keyframes pulseGlow {
+    0%, 100% {
+        opacity: 0.65;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 1;
+        transform: scale(1.03);
+    }
 }
