@@ -7,9 +7,14 @@
     --text-light: #ffffff;
 }
 
-* { box-sizing: border-box; }
+* {
+    box-sizing: border-box;
+}
 
-html, body { width: 100%; height: 100%; }
+html, body {
+    width: 100%;
+    height: 100%;
+}
 
 body {
     margin: 0;
@@ -24,28 +29,122 @@ body {
     overflow: hidden;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     color: var(--text-light);
-}
-
-/* Aseguramos que el canvas ocupe todo el espacio sin scroll */
-#particle-canvas {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    z-index: 0;
-    pointer-events: none;
-    display: block; /* Evita espacios en blanco abajo */
-}
-
-
-.book-container {
     position: relative;
-    width: 350px;
-    height: 500px;
+    isolation: isolate;
+}
+
+/* Fondo decorativo detrás de todo */
+body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: -2;
+    background:
+        radial-gradient(circle at 50% 20%, rgba(255, 255, 255, 0.05), transparent 25%),
+        radial-gradient(circle at 50% 80%, rgba(255, 79, 216, 0.08), transparent 30%);
+    pointer-events: none;
+}
+
+/* Fondo de partículas */
+#particles-js {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+    pointer-events: none;
+    filter: drop-shadow(0 0 8px rgba(255, 79, 216, 0.18));
+}
+
+/* El canvas de particles ocupa todo el fondo */
+#particles-js canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+    filter: drop-shadow(0 0 10px rgba(255, 79, 216, 0.4))
+            drop-shadow(0 0 5px rgba(168, 85, 247, 0.2));
+}
+
+/* Capa principal por encima del fondo */
+.book-container {
     perspective: 2000px;
     z-index: 10;
-    transition: opacity 1.5s ease;
+    position: relative;
+}
+
+.book {
+    width: 350px;
+    height: 500px;
+    position: relative;
+    transform-style: preserve-3d;
+    transition: transform 0.5s ease;
+    filter: drop-shadow(0 20px 45px rgba(0, 0, 0, 0.65));
+}
+
+.page {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    transform-origin: left;
+    transform-style: preserve-3d;
+    transition: transform 1.15s cubic-bezier(0.645, 0.045, 0.355, 1);
+    cursor: pointer;
+}
+
+.front, .back {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    backface-visibility: hidden;
+    background-size: cover;
+    background-position: center;
+    border-radius: 0 14px 14px 0;
+    overflow: hidden;
+}
+
+.front {
+    box-shadow:
+        inset -8px 0 25px rgba(0, 0, 0, 0.55),
+        inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+
+.front::after,
+.back::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+        linear-gradient(120deg, rgba(255,255,255,0.14), transparent 35%),
+        linear-gradient(180deg, rgba(0,0,0,0.05), rgba(0,0,0,0.28));
+    pointer-events: none;
+}
+
+.back {
+    background-color: var(--card-bg);
+    transform: rotateY(180deg);
+    box-shadow:
+        inset 0 0 0 1px rgba(255, 79, 216, 0.08),
+        inset -8px 0 25px rgba(0, 0, 0, 0.55);
+}
+
+.page.flipped {
+    transform: rotateY(-180deg);
+}
+
+.tap-hint {
+    position: absolute;
+    bottom: 20px;
+    width: 100%;
+    text-align: center;
+    color: rgba(255, 255, 255, 0.78);
+    font-size: 0.78em;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    text-shadow: 0 0 12px rgba(255, 79, 216, 0.35);
+    opacity: 0.75;
+    z-index: 20;
 }
 
 .book-container::before {
@@ -58,57 +157,49 @@ body {
     pointer-events: none;
 }
 
-.book { width: 100%; height: 100%; position: relative; transform-style: preserve-3d; }
-
-.page {
-    width: 100%; height: 100%;
-    position: absolute; top: 0; left: 0;
-    transform-origin: left;
-    transform-style: preserve-3d;
-    transition: transform 1.15s cubic-bezier(0.645, 0.045, 0.355, 1);
-    cursor: pointer;
-}
-
-.front, .back {
-    position: absolute;
-    width: 100%; height: 100%;
-    backface-visibility: hidden;
-    background-size: cover;
-    background-position: center;
-    border-radius: 0 14px 14px 0;
-}
-
-.front { box-shadow: inset -8px 0 25px rgba(0, 0, 0, 0.55); }
-.back { 
-    background-color: var(--card-bg); 
-    transform: rotateY(180deg); 
-    box-shadow: inset 8px 0 25px rgba(0, 0, 0, 0.55); 
-}
-
-.page.flipped { transform: rotateY(-180deg); }
-
-.tap-hint {
-    position: absolute; bottom: 20px; width: 100%;
-    text-align: center; color: rgba(255, 255, 255, 0.78);
-    font-size: 0.78em; letter-spacing: 3px; text-transform: uppercase;
-    text-shadow: 0 0 12px rgba(255, 79, 216, 0.35);
-    opacity: 0.75; z-index: 20;
-}
-
-#final-message-container {
-    position: fixed; z-index: 20; text-align: center;
-    opacity: 0; transition: opacity 3s ease; pointer-events: none;
-}
-#final-message-container.show { opacity: 1; }
-
-.final-text { color: white; font-size: 1.5rem; text-shadow: 0 0 15px var(--pink-accent); }
-.final-text span { color: var(--pink-accent); font-size: 3.5rem; display: block; font-weight: bold; }
-
 .bp-translate-btn {
-    position: fixed; bottom: 30px; right: 30px;
-    background: rgba(0, 0, 0, 0.8); color: #ff4fd8;
-    border: 2px solid #ff4fd8; padding: 12px 20px;
-    border-radius: 50px; cursor: pointer; z-index: 9999;
-    font-family: 'Arial', sans-serif; font-weight: bold;
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    background: rgba(0, 0, 0, 0.8);
+    color: #ff4fd8;
+    border: 2px solid #ff4fd8;
+    padding: 12px 20px;
+    border-radius: 50px;
+    cursor: pointer;
+    z-index: 9999;
+    font-family: 'Arial', sans-serif;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transition: all 0.3s ease;
+    box-shadow: 0 0 15px rgba(255, 79, 216, 0.4);
 }
-.hidden { display: none !important; }
+
+.bp-translate-btn:hover {
+    background: #ff4fd8;
+    color: #000;
+    box-shadow: 0 0 25px rgba(255, 79, 216, 0.8);
+    transform: scale(1.05);
+}
+
+.bp-translate-btn .icon { font-size: 1.2rem; }
+
+.bp-swal-popup {
+    background: rgba(0, 0, 0, 0.95) !important;
+    border: 2px solid #ff4fd8 !important;
+    color: #fff !important;
+    border-radius: 20px !important;
+}
+
+.bp-swal-title { color: #ff4fd8 !important; }
+
+/* Canvas final por encima de todo */
+#final-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    pointer-events: none;
+    isolation: isolate;
+}
