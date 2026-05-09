@@ -26,12 +26,18 @@ body {
     color: var(--text-light);
 }
 
+/* Aseguramos que el canvas ocupe todo el espacio sin scroll */
 #particle-canvas {
     position: fixed;
-    inset: 0;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
     z-index: 0;
     pointer-events: none;
+    display: block; /* Evita espacios en blanco abajo */
 }
+
 
 .book-container {
     position: relative;
