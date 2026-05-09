@@ -49,7 +49,7 @@ function preloadImage(src) {
 // Pre-carga opcional de las traducciones al iniciar
 window.addEventListener('load', () => {
     originalImages.forEach((originalName) => {
-        let tradName = originalName.replace(/\d+/, "").replace(".png", "_traduccion.png");
+        let tradName = originalName.replace(/\(\d+\)/, "").replace(".png", "_traduccion.png");
         if (tradName.includes("jennie")) tradName = tradName.replace("jennie", "Jennie");
         if (tradName.includes("lisa")) tradName = tradName.replace("lisa", "Lisa");
 
@@ -247,7 +247,7 @@ btnTranslate.addEventListener('click', async (e) => {
 
     if (!modoTraduccion) {
         let originalName = originalImages[indexPage];
-        let tradName = originalName.replace(/\d+/, "").replace(".png", "_traduccion.png");
+        let tradName = originalName.replace(/\(\d+\)/, "").replace(".png", "_traduccion.png");
 
         if (tradName.includes("jennie")) tradName = tradName.replace("jennie", "Jennie");
         if (tradName.includes("lisa")) tradName = tradName.replace("lisa", "Lisa");
@@ -305,4 +305,182 @@ if (typeof particlesJS !== 'undefined') {
                 type: ["circle", "star", "image"],
                 image: {
                     // SVG de corazón en base64 para que no necesites archivos extra
-                    src: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj48cGF0aCBmaWxsPSIjZmY0ZmQ4IiBkPSJNNDcuNiAzMDAuNEwyMjguMyA0NjkuMWM3LjUgNyAxNy40IDEwLjkgMjcuNyAxMC45czIwLjItMy45IDI3LjctMTAuOUw0NjQuNCAzMDAuNEM0OT
+                    src: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj48cGF0aCBmaWxsPSIjZmY0ZmQ4IiBkPSJNNDcuNiAzMDAuNEwyMjguMyA0NjkuMWM3LjUgNyAxNy40IDEwLjkgMjcuNyAxMC45czIwLjItMy45IDI3LjctMTAuOUw0NjQuNCAzMDAuNEM0OTQuOCAyNzIuMSA1MTIgMjMyLjQgNTEyIDE5MC45di01LjhjMC02OS45LTUwLjUtMTI5LjUtMTE5LjQtMTQxQzM0NyAzNi41IDMwMC42IDUxLjQgMjY4IDg0TDI1NiA5NkwyNDQgODRjLTMyLjYtMzIuNi03OS00Ny41LTEyNC42LTM5LjlDNTAuNSA1NS42IDAgMTE1LjIgMCAxODUuMXY1LjhjMCA0MS41IDE3LjIgODEuMiA0Ny42IDEwOS41eiIvPjwvc3ZnPg==",
+                    width: 100,
+                    height: 100
+                }
+            },
+            opacity: {
+                value: 0.7,
+                random: true,
+                anim: { enable: true, speed: 1, opacity_min: 0.2, sync: false }
+            },
+            size: {
+                value: 3.5,
+                random: true,
+                anim: { enable: true, speed: 4, size_min: 0.3, sync: false }
+            },
+            line_linked: {
+                enable: true,
+                distance: 120,
+                color: "#ff4fd8",
+                opacity: 0.25,
+                width: 1
+            },
+            move: {
+                enable: true,
+                speed: 1.8,
+                direction: "none",
+                random: true,
+                straight: false,
+                out_mode: "out",
+                bounce: false
+            }
+        },
+        interactivity: {
+            detect_on: "canvas",
+            events: {
+                onhover: { enable: true, mode: "bubble" },
+                onclick: { enable: true, mode: "push" }
+            },
+            modes: {
+                bubble: { distance: 200, size: 8, duration: 2, opacity: 1, speed: 3 },
+                push: { particles_nb: 4 }
+            }
+        },
+        retina_detect: true
+    });
+}
+
+// --- ACTUALIZACIÓN DEL ANALIZADOR (Para el efecto "Latido") ---
+function actualizarParticulasConAudio() {
+    animationId = requestAnimationFrame(actualizarParticulasConAudio);
+    if (!analyser || !dataArray) return;
+
+    analyser.getByteFrequencyData(dataArray);
+
+    // Capturamos el "Punch" (bajos profundos)
+    let sumaBajos = 0;
+    for (let i = 0; i < 4; i++) sumaBajos += dataArray[i];
+    let promedioBajos = sumaBajos / 4;
+
+    // Suavizado dinámico
+    energiaSuave = energiaSuave * 0.85 + promedioBajos * 0.15;
+
+    const pJS = window.pJSDom && window.pJSDom[0] && window.pJSDom[0].pJS;
+    if (pJS && pJS.particles) {
+        // Velocidad: Reacciona al ritmo general
+        pJS.particles.move.speed = 1 + (energiaSuave / 15);
+        
+        // Tamaño: Las partículas "saltan" con el beat (efecto muy visual)
+        pJS.particles.size.value = 3 + (energiaSuave / 30);
+        
+        // Opacidad: Se vuelven más brillantes en los momentos intensos
+        pJS.particles.opacity.value = 0.4 + (energiaSuave / 200);
+        
+        // Color dinámico (Sutil): Las líneas se intensifican
+        pJS.particles.line_linked.opacity = 0.1 + (energiaSuave / 400);
+    }
+}
+
+/* =========================
+   FINAL CON CANVAS INDEPENDIENTE
+   ========================= */
+function activarFinal() {
+    if (finalActivado) return;
+    finalActivado = true;
+
+    modoTraduccion = false;
+    btnTranslate.style.display = "none";
+
+    bookContainer.style.opacity = "0";
+    bookContainer.style.pointerEvents = "none";
+
+    setTimeout(() => {
+        bookContainer.style.display = "none";
+        crearCorazonFinal();
+
+        if (finalMsg) {
+            finalMsg.classList.remove('hidden');
+            setTimeout(() => finalMsg.classList.add('show'), 300);
+        }
+    }, 1500);
+}
+
+function crearCorazonFinal() {
+    const overlay = document.createElement('div');
+    overlay.id = 'final-overlay';
+    document.body.appendChild(overlay);
+
+    heartCanvas = document.createElement('canvas');
+    heartCanvas.style.position = 'absolute';
+    heartCanvas.style.inset = '0';
+    heartCanvas.style.width = '100%';
+    heartCanvas.style.height = '100%';
+    heartCanvas.style.display = 'block';
+    overlay.appendChild(heartCanvas);
+
+    heartCtx = heartCanvas.getContext('2d');
+
+    const resize = () => {
+        heartCanvas.width = window.innerWidth;
+        heartCanvas.height = window.innerHeight;
+    };
+
+    resize();
+    window.addEventListener('resize', resize, { passive: true });
+
+    class Particle {
+        constructor(tx, ty) {
+            this.x = Math.random() * heartCanvas.width;
+            this.y = Math.random() * heartCanvas.height;
+            this.tx = tx;
+            this.ty = ty;
+            this.size = Math.random() * 2 + 1;
+        }
+
+        update() {
+            const scale = 1 + Math.sin(heartPulse) * 0.1;
+            const targetX = this.tx * scale + heartCanvas.width / 2;
+            const targetY = this.ty * scale + heartCanvas.height / 2;
+            this.x += (targetX - this.x) * 0.05;
+            this.y += (targetY - this.y) * 0.05;
+        }
+
+        draw() {
+            heartCtx.fillStyle = "#ff4fd8";
+            heartCtx.beginPath();
+            heartCtx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+            heartCtx.fill();
+        }
+    }
+
+    heartParticles = [];
+    for (let i = 0; i < 200; i++) {
+        const t = (i / 200) * Math.PI * 2;
+        const x = 16 * Math.pow(Math.sin(t), 3);
+        const y = -(13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t));
+        heartParticles.push(new Particle(x * 13, y * 13));
+    }
+
+    const render = () => {
+        if (!heartCtx || !heartCanvas) return;
+
+        heartCtx.clearRect(0, 0, heartCanvas.width, heartCanvas.height);
+
+        heartPulse += 0.05;
+        heartParticles.forEach(p => {
+            p.update();
+            p.draw();
+        });
+
+        heartFrame = requestAnimationFrame(render);
+    };
+
+    render();
+}
+
+// Iniciar al cargar
+window.addEventListener('load', () => {
+    actualizarZIndex();
+});
