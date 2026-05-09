@@ -5,9 +5,6 @@ const audio = document.getElementById('bg-music');
 const btnTranslate = document.getElementById('btn-translate');
 const finalMsg = document.getElementById('final-message-container');
 
-const IMAGE_DIR = 'assets/images';
-const TRANSLATION_DIR = `${IMAGE_DIR}/traduccion`;
-
 let modoTraduccion = false;
 let cargandoTraduccion = false;
 let paginaActual = 0;
@@ -41,7 +38,7 @@ const originalImages = [
 ];
 
 function getOriginalSrc(index) {
-  return `${IMAGE_DIR}/${originalImages[index]}`;
+  return `assets/images/${originalImages[index]}`;
 }
 
 function getTranslatedName(originalName) {
@@ -56,7 +53,7 @@ function getTranslatedName(originalName) {
 }
 
 function getTranslatedSrc(index) {
-  return `${TRANSLATION_DIR}/${getTranslatedName(originalImages[index])}`;
+  return `assets/images/traduccion/${getTranslatedName(originalImages[index])}`;
 }
 
 function preloadImage(src) {
@@ -70,11 +67,10 @@ function preloadImage(src) {
 
 async function preloadTranslations() {
   for (let i = 0; i < originalImages.length; i++) {
-    const src = getTranslatedSrc(i);
     try {
-      await preloadImage(src);
+      await preloadImage(getTranslatedSrc(i));
     } catch (_) {
-      // Si alguna no existe, no rompemos la app.
+      // no bloquea nada si falta alguna imagen
     }
   }
 }
@@ -85,12 +81,17 @@ async function preloadTranslations() {
 function initParticles() {
   if (typeof particlesJS === 'undefined') return;
 
+  const container = document.getElementById('particles-js');
+  if (!container) return;
+
+  container.innerHTML = '';
+
   particlesJS("particles-js", {
     particles: {
       number: { value: 110, density: { enable: true, value_area: 900 } },
       color: { value: ["#ff4fd8", "#ffffff", "#a855f7", "#ffb7ff"] },
       shape: {
-        type: ["circle", "star"],
+        type: ["circle", "star"]
       },
       opacity: {
         value: 0.7,
@@ -132,6 +133,19 @@ function initParticles() {
     },
     retina_detect: true
   });
+
+  const fixCanvas = () => {
+    const canvas = document.querySelector('#particles-js canvas');
+    if (canvas) {
+      canvas.style.width = '100%';
+      canvas.style.height = '100%';
+      canvas.style.display = 'block';
+    }
+  };
+
+  fixCanvas();
+  setTimeout(fixCanvas, 50);
+  setTimeout(fixCanvas, 250);
 }
 
 /* =========================
@@ -215,7 +229,9 @@ function desactivarTraduccionGlobal() {
 
   pages.forEach((p, i) => {
     const front = p.querySelector('.front');
-    if (front) front.style.backgroundImage = `url('${getOriginalSrc(i)}')`;
+    if (front) {
+      front.style.backgroundImage = `url('${getOriginalSrc(i)}')`;
+    }
   });
 }
 
@@ -304,10 +320,11 @@ btnTranslate.addEventListener('click', async (e) => {
 });
 
 /* =========================
-   EVENTO CLICK DEL LIBRO
+   CLICK DEL LIBRO
    ========================= */
 pages.forEach((page) => {
   page.style.pointerEvents = 'none';
+  page.style.zIndex = '1';
 });
 
 if (bookContainer) {
@@ -322,6 +339,8 @@ if (bookContainer) {
     else retrocederPagina();
   });
 }
+
+actualizarZIndex();
 
 /* =========================
    FINAL CON CORAZÓN
@@ -338,34 +357,42 @@ function activarFinal() {
   if (finalActivado) return;
   finalActivado = true;
   modoTraduccion = false;
-  isHeartMode = true;
 
-  bookContainer.style.opacity = "0";
   btnTranslate.style.display = "none";
 
+  const bookEl = document.querySelector('.book');
+  if (bookEl) {
+    bookEl.style.opacity = '0';
+    bookEl.style.pointerEvents = 'none';
+  }
+
   setTimeout(() => {
-    bookContainer.style.display = "none";
+    if (bookContainer) {
+      bookContainer.style.display = "none";
+    }
+
     ocultarParticlesJS();
     crearCorazonFinal();
 
     if (finalMsg) {
       finalMsg.classList.remove('hidden');
-      setTimeout(() => finalMsg.classList.add('show'), 500);
+      setTimeout(() => finalMsg.classList.add('show'), 300);
     }
-  }, 1200);
+  }, 600);
 }
 
 function crearCorazonFinal() {
+  const overlay = document.createElement('div');
+  overlay.id = 'final-overlay';
+  document.body.appendChild(overlay);
+
   heartCanvas = document.createElement('canvas');
-  heartCanvas.id = 'heart-canvas';
-  heartCanvas.style.position = 'fixed';
-  heartCanvas.style.top = '0';
-  heartCanvas.style.left = '0';
-  heartCanvas.style.width = '100vw';
-  heartCanvas.style.height = '100vh';
-  heartCanvas.style.zIndex = '100';
-  heartCanvas.style.pointerEvents = 'none';
-  document.body.appendChild(heartCanvas);
+  heartCanvas.style.position = 'absolute';
+  heartCanvas.style.inset = '0';
+  heartCanvas.style.width = '100%';
+  heartCanvas.style.height = '100%';
+  heartCanvas.style.display = 'block';
+  overlay.appendChild(heartCanvas);
 
   heartCtx = heartCanvas.getContext('2d');
 
@@ -373,8 +400,9 @@ function crearCorazonFinal() {
     heartCanvas.width = window.innerWidth;
     heartCanvas.height = window.innerHeight;
   };
+
   resize();
-  window.addEventListener('resize', resize);
+  window.addEventListener('resize', resize, { passive: true });
 
   class Particle {
     constructor(tx, ty) {
@@ -386,8 +414,9 @@ function crearCorazonFinal() {
     }
 
     update() {
-      const targetX = this.tx * (1 + Math.sin(heartPulse) * 0.1) + heartCanvas.width / 2;
-      const targetY = this.ty * (1 + Math.sin(heartPulse) * 0.1) + heartCanvas.height / 2;
+      const scale = 1 + Math.sin(heartPulse) * 0.1;
+      const targetX = this.tx * scale + heartCanvas.width / 2;
+      const targetY = this.ty * scale + heartCanvas.height / 2;
       this.x += (targetX - this.x) * 0.05;
       this.y += (targetY - this.y) * 0.05;
     }
