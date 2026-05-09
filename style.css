@@ -1,71 +1,152 @@
 :root {
     --pink-accent: #ff4fd8;
+    --pink-soft: #ff8bd6;
     --pink-deep: #ff2ea6;
     --dark-bg: #050505;
+    --card-bg: #111111;
+    --text-light: #ffffff;
 }
 
-body, html {
-    margin: 0; padding: 0;
-    width: 100%; height: 100%;
+* { box-sizing: border-box; }
+
+html, body {
+    width: 100%;
+    height: 100%;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    background:
+        radial-gradient(circle at top, rgba(255, 79, 216, 0.12), transparent 30%),
+        radial-gradient(circle at bottom, rgba(255, 46, 166, 0.08), transparent 35%),
+        linear-gradient(135deg, #040404 0%, #090909 45%, #120610 100%);
+    display: flex;
+    justify-content: center;
+    align-items: center;
     overflow: hidden;
-    background: radial-gradient(circle at center, #120610 0%, #050505 100%);
-    display: flex; justify-content: center; align-items: center;
-    font-family: 'Segoe UI', sans-serif;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: var(--text-light);
 }
 
 #particle-canvas {
-    position: fixed; inset: 0;
-    z-index: 1;
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+    pointer-events: none;
 }
 
 .book-container {
     position: relative;
-    z-index: 10;
+    width: 350px;
+    height: 500px;
     perspective: 2000px;
-    width: 350px; height: 500px;
+    z-index: 10;
     transition: opacity 1.5s ease;
 }
 
+/* El brillo que tenías alrededor del libro */
+.book-container::before {
+    content: "";
+    position: absolute;
+    inset: -30px;
+    z-index: -1;
+    background: radial-gradient(circle, rgba(255, 79, 216, 0.18), transparent 60%);
+    filter: blur(20px);
+    pointer-events: none;
+}
+
 .book {
-    width: 100%; height: 100%;
+    width: 100%;
+    height: 100%;
     position: relative;
     transform-style: preserve-3d;
 }
 
 .page {
-    width: 100%; height: 100%;
+    width: 100%;
+    height: 100%;
     position: absolute;
+    top: 0;
+    left: 0;
     transform-origin: left;
     transform-style: preserve-3d;
-    transition: transform 1.2s cubic-bezier(0.645, 0.045, 0.355, 1);
+    transition: transform 1.15s cubic-bezier(0.645, 0.045, 0.355, 1);
     cursor: pointer;
 }
 
 .front, .back {
     position: absolute;
-    width: 100%; height: 100%;
+    width: 100%;
+    height: 100%;
     backface-visibility: hidden;
     background-size: cover;
-    border-radius: 0 15px 15px 0;
-    box-shadow: inset -5px 0 20px rgba(0,0,0,0.5);
+    background-position: center;
+    border-radius: 0 14px 14px 0;
 }
 
-.back { background: #111; transform: rotateY(180deg); }
+.front {
+    box-shadow: inset -8px 0 25px rgba(0, 0, 0, 0.55);
+}
+
+.back {
+    background-color: var(--card-bg);
+    transform: rotateY(180deg);
+    box-shadow: inset 8px 0 25px rgba(0, 0, 0, 0.55);
+}
+
 .page.flipped { transform: rotateY(-180deg); }
 
+.tap-hint {
+    position: absolute;
+    bottom: 20px;
+    width: 100%;
+    text-align: center;
+    color: rgba(255, 255, 255, 0.78);
+    font-size: 0.78em;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    text-shadow: 0 0 12px rgba(255, 79, 216, 0.35);
+    opacity: 0.75;
+    z-index: 20;
+}
+
+/* MENSAJE FINAL */
 #final-message-container {
-    position: fixed; z-index: 20; text-align: center;
-    opacity: 0; transition: opacity 3s ease; pointer-events: none;
+    position: fixed;
+    z-index: 20;
+    text-align: center;
+    opacity: 0;
+    transition: opacity 3s ease;
+    pointer-events: none;
 }
 #final-message-container.show { opacity: 1; }
 
-.final-text { color: white; font-size: 1.5rem; text-shadow: 0 0 15px var(--pink-accent); }
-.final-text span { color: var(--pink-accent); font-size: 3.5rem; display: block; font-weight: bold; }
+.final-text {
+    color: white;
+    font-size: 1.5rem;
+    text-shadow: 0 0 15px var(--pink-accent);
+}
+.final-text span {
+    color: var(--pink-accent);
+    font-size: 3.5rem;
+    display: block;
+    font-weight: bold;
+}
 
 .bp-translate-btn {
-    position: fixed; bottom: 30px; right: 30px;
-    background: rgba(0,0,0,0.8); color: var(--pink-accent);
-    border: 2px solid var(--pink-accent); padding: 12px 20px;
-    border-radius: 50px; cursor: pointer; z-index: 100;
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    background: rgba(0, 0, 0, 0.8);
+    color: #ff4fd8;
+    border: 2px solid #ff4fd8;
+    padding: 12px 20px;
+    border-radius: 50px;
+    cursor: pointer;
+    z-index: 9999;
 }
+
 .hidden { display: none !important; }
