@@ -21,7 +21,7 @@ let animationId = null;
 // Array con los nombres originales exactos para la restauración
 const originalImages = [
     'inicio.png', 'teamo(1).png', 'carta(2).png', 'lisa(3).png',
-    'jennie(4).png', 'jisoo(5).png', 'rose(6).png', 'final(7).png'
+    'jisoo(5).png', 'jennie(4).png', 'rose(6).png', 'final(7).png'
 ];
 
 function preloadImage(src) {
