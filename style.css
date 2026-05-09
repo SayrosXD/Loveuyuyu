@@ -33,7 +33,6 @@ body {
     isolation: isolate;
 }
 
-/* Fondo decorativo detrás de todo */
 body::before {
     content: "";
     position: fixed;
@@ -45,10 +44,11 @@ body::before {
     pointer-events: none;
 }
 
-/* Fondo de partículas */
+/* Mantiene particles.js intacto */
 #particles-js {
     position: fixed;
-    inset: 0;
+    top: 0;
+    left: 0;
     width: 100%;
     height: 100%;
     z-index: -1;
@@ -56,7 +56,6 @@ body::before {
     filter: drop-shadow(0 0 8px rgba(255, 79, 216, 0.18));
 }
 
-/* El canvas de particles ocupa todo el fondo */
 #particles-js canvas {
     display: block;
     width: 100%;
@@ -65,7 +64,6 @@ body::before {
             drop-shadow(0 0 5px rgba(168, 85, 247, 0.2));
 }
 
-/* Capa principal por encima del fondo */
 .book-container {
     perspective: 2000px;
     z-index: 10;
@@ -168,23 +166,7 @@ body::before {
     border-radius: 50px;
     cursor: pointer;
     z-index: 9999;
-    font-family: 'Arial', sans-serif;
-    font-weight: bold;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    transition: all 0.3s ease;
-    box-shadow: 0 0 15px rgba(255, 79, 216, 0.4);
 }
-
-.bp-translate-btn:hover {
-    background: #ff4fd8;
-    color: #000;
-    box-shadow: 0 0 25px rgba(255, 79, 216, 0.8);
-    transform: scale(1.05);
-}
-
-.bp-translate-btn .icon { font-size: 1.2rem; }
 
 .bp-swal-popup {
     background: rgba(0, 0, 0, 0.95) !important;
@@ -193,13 +175,34 @@ body::before {
     border-radius: 20px !important;
 }
 
-.bp-swal-title { color: #ff4fd8 !important; }
+.bp-swal-title {
+    color: #ff4fd8 !important;
+}
 
-/* Canvas final por encima de todo */
+/* =========================
+   OVERLAY DEL CANVAS FINAL
+   ========================= */
 #final-overlay {
     position: fixed;
-    inset: 0;
-    z-index: 100;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 9999;
     pointer-events: none;
-    isolation: isolate;
+    overflow: hidden;
+}
+
+#final-overlay canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+
+/* Mensaje final encima del corazón */
+#final-message-container {
+    z-index: 10000;
 }
