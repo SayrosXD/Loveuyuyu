@@ -29,39 +29,45 @@ body {
     overflow: hidden;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     color: var(--text-light);
-    position: relative;
-    isolation: isolate;
 }
 
-body::before {
-    content: "";
-    position: fixed;
-    inset: 0;
-    z-index: -2;
-    background:
-        radial-gradient(circle at 50% 20%, rgba(255, 255, 255, 0.05), transparent 25%),
-        radial-gradient(circle at 50% 80%, rgba(255, 79, 216, 0.08), transparent 30%);
-    pointer-events: none;
-}
-
-/* Mantiene particles.js intacto */
+/* Fondo de partículas */
 #particles-js {
     position: fixed;
-    top: 0;
-    left: 0;
+    inset: 0;
     width: 100%;
     height: 100%;
-    z-index: -1;
+    z-index: 0;
     pointer-events: none;
     filter: drop-shadow(0 0 8px rgba(255, 79, 216, 0.18));
 }
 
+/* Efecto de resplandor mágico para el canvas de partículas */
 #particles-js canvas {
-    display: block;
-    width: 100%;
-    height: 100%;
     filter: drop-shadow(0 0 10px rgba(255, 79, 216, 0.4))
             drop-shadow(0 0 5px rgba(168, 85, 247, 0.2));
+    animation: floating-glow 6s ease-in-out infinite;
+}
+
+@keyframes floating-glow {
+    0%, 100% {
+        filter: drop-shadow(0 0 10px rgba(255, 79, 216, 0.4));
+    }
+    50% {
+        filter: drop-shadow(0 0 20px rgba(255, 79, 216, 0.7)) brightness(1.2);
+    }
+}
+
+/* Capa sutil para dar más profundidad */
+body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    background:
+        radial-gradient(circle at 50% 20%, rgba(255, 255, 255, 0.05), transparent 25%),
+        radial-gradient(circle at 50% 80%, rgba(255, 79, 216, 0.08), transparent 30%);
+    pointer-events: none;
 }
 
 .book-container {
@@ -166,6 +172,34 @@ body::before {
     border-radius: 50px;
     cursor: pointer;
     z-index: 9999;
+    font-family: 'Arial', sans-serif;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transition: all 0.3s ease;
+    box-shadow: 0 0 15px rgba(255, 79, 216, 0.4);
+}
+
+.bp-translate-btn:hover {
+    background: #ff4fd8;
+    color: #000;
+    box-shadow: 0 0 25px rgba(255, 79, 216, 0.8);
+    transform: scale(1.05);
+}
+
+.bp-translate-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.bp-translate-btn .icon {
+    font-size: 1.2rem;
+}
+
+.bp-translate-btn .text {
+    line-height: 1;
 }
 
 .bp-swal-popup {
@@ -180,29 +214,55 @@ body::before {
 }
 
 /* =========================
-   OVERLAY DEL CANVAS FINAL
+   FINAL OVERLAY / CORAZÓN
    ========================= */
 #final-overlay {
     position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    z-index: 9999;
+    inset: 0;
+    z-index: 9998;
     pointer-events: none;
     overflow: hidden;
+    background: radial-gradient(circle at center, rgba(255, 79, 216, 0.08), rgba(0, 0, 0, 0.96));
 }
 
 #final-overlay canvas {
-    position: absolute;
-    top: 0;
-    left: 0;
+    display: block;
     width: 100%;
     height: 100%;
-    display: block;
 }
 
-/* Mensaje final encima del corazón */
+/* =========================
+   MENSAJE FINAL
+   ========================= */
 #final-message-container {
-    z-index: 10000;
+    position: fixed;
+    left: 50%;
+    bottom: 40px;
+    transform: translateX(-50%) translateY(20px);
+    z-index: 9999;
+    text-align: center;
+    opacity: 0;
+    transition: opacity 0.6s ease, transform 0.6s ease;
+    pointer-events: none;
+}
+
+#final-message-container.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+}
+
+#final-message-container.hidden {
+    display: none;
+}
+
+/* =========================
+   AJUSTE SUAVE PARA LA VISTA FINAL
+   ========================= */
+body.final-active {
+    overflow: hidden;
+}
+
+body.final-active .book-container {
+    opacity: 0;
+    pointer-events: none;
 }
