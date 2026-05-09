@@ -2,12 +2,34 @@ const pages = document.querySelectorAll('.page');
 const audio = document.getElementById('bg-music');
 const btnTranslate = document.getElementById('btn-translate');
 let modoTraduccion = false;
+let cargandoTraduccion = false;
 
 // Array con los nombres originales exactos para la restauración
 const originalImages = [
     'inicio.png', 'teamo(1).png', 'carta(2).png', 'lisa(3).png', 
     'jennie(4).png', 'jisoo(5).png', 'rose(6).png', 'final(7).png'
 ];
+
+function preloadImage(src) {
+    return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => resolve(src);
+        img.onerror = reject;
+        img.src = src;
+    });
+}
+
+// Pre-carga opcional de las traducciones al iniciar
+window.addEventListener('load', () => {
+    originalImages.forEach((originalName) => {
+        let tradName = originalName.replace(/\(\d+\)/, "").replace(".png", "_traduccion.png");
+        if (tradName.includes("jennie")) tradName = tradName.replace("jennie", "Jennie");
+        if (tradName.includes("lisa")) tradName = tradName.replace("lisa", "Lisa");
+
+        const img = new Image();
+        img.src = `traduccion/${tradName}`;
+    });
+});
 
 // --- 1. NAVEGACIÓN Y AUDIO ---
 pages.forEach((page, index) => {
@@ -45,9 +67,11 @@ function playMusic(source) {
 }
 
 // --- 2. SISTEMA DE TRADUCCIÓN DINÁMICO ---
-btnTranslate.addEventListener('click', (e) => {
+btnTranslate.addEventListener('click', async (e) => {
     e.preventDefault();
     e.stopPropagation();
+
+    if (cargandoTraduccion) return;
 
     const pageActiva = Array.from(pages).find(p => !p.classList.contains('flipped'));
     if (!pageActiva) return;
@@ -68,13 +92,27 @@ btnTranslate.addEventListener('click', (e) => {
         if (tradName.includes("jennie")) tradName = tradName.replace("jennie", "Jennie");
         if (tradName.includes("lisa")) tradName = tradName.replace("lisa", "Lisa");
 
-        // Aplicamos la ruta de la carpeta /traduccion
-        frontDiv.style.backgroundImage = `url('traduccion/${tradName}')`;
-        
-        btnTranslate.querySelector('.text').innerText = "Ver Original";
-        btnTranslate.style.background = "#ff4fd8";
-        btnTranslate.style.color = "#000";
-        modoTraduccion = true;
+        const tradSrc = `traduccion/${tradName}`;
+
+        try {
+            cargandoTraduccion = true;
+            btnTranslate.disabled = true;
+
+            await preloadImage(tradSrc);
+
+            // Aplicamos la ruta de la carpeta /traduccion
+            frontDiv.style.backgroundImage = `url('${tradSrc}')`;
+            
+            btnTranslate.querySelector('.text').innerText = "Ver Original";
+            btnTranslate.style.background = "#ff4fd8";
+            btnTranslate.style.color = "#000";
+            modoTraduccion = true;
+        } catch (error) {
+            console.log("No se pudo cargar la imagen de traducción", error);
+        } finally {
+            cargandoTraduccion = false;
+            btnTranslate.disabled = false;
+        }
     } else {
         desactivarTraduccionGlobal();
     }
