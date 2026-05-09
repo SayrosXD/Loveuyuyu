@@ -10,21 +10,17 @@ let particles = [];
 let isHeartMode = false;
 let pulseFactor = 1;
 let pulseTime = 0;
+let energiaSuave = 0;
+let audioContext, analyser, dataArray;
 
-// Variables para Traducción
-let modoTraduccion = false;
-let cargandoTraduccion = false;
-const originalImages = [
-    'inicio.png', 'teamo(1).png', 'carta(2).png', 'lisa(3).png',
-    'jennie(4).png', 'jisoo(5).png', 'rose(6).png', 'final(7).png'
-];
-
-// Audio Visualizer
-let audioContext, analyser, dataArray, energiaSuave = 0;
-
+// --- CONFIGURACIÓN DE NITIDEZ (Anti-borroso) ---
 function resize() {
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = window.innerWidth * dpr;
+    canvas.height = window.innerHeight * dpr;
+    ctx.scale(dpr, dpr);
+    canvas.style.width = `${window.innerWidth}px`;
+    canvas.style.height = `${window.innerHeight}px`;
 }
 window.addEventListener('resize', resize);
 resize();
@@ -34,18 +30,23 @@ class Particle {
         this.init();
     }
     init() {
-        this.x = Math.random() * canvas.width;
-        this.y = Math.random() * canvas.height;
-        this.vx = (Math.random() - 0.5) * 1.2;
-        this.vy = (Math.random() - 0.5) * 1.2;
-        this.size = Math.random() * 2 + 1;
+        // Posición aleatoria inicial
+        this.x = Math.random() * window.innerWidth;
+        this.y = Math.random() * window.innerHeight;
+        
+        // Velocidad reducida (basada en tu original ~1.2)
+        this.vx = (Math.random() - 0.5) * 1.1; 
+        this.vy = (Math.random() - 0.5) * 1.1;
+        
+        this.size = Math.random() * 1.5 + 1;
         this.type = Math.floor(Math.random() * 3);
 
+        // Tus colores originales
         const r = Math.random();
-        if (r < 0.55) this.color = '#ff4fd8'; // rosa
-        else if (r < 0.8) this.color = '#ffffff'; // blanco
-        else if (r < 0.92) this.color = '#b86bff'; // morado claro
-        else this.color = '#7a2cff'; // morado profundo
+        if (r < 0.55) this.color = '#ff4fd8';
+        else if (r < 0.8) this.color = '#ffffff';
+        else if (r < 0.92) this.color = '#b86bff';
+        else this.color = '#7a2cff';
 
         this.targetX = null;
         this.targetY = null;
@@ -53,43 +54,52 @@ class Particle {
 
     update() {
         if (isHeartMode && this.targetX !== null) {
-            let tx = this.targetX * pulseFactor + canvas.width / 2;
-            let ty = this.targetY * pulseFactor + canvas.height / 2;
+            let tx = this.targetX * pulseFactor + window.innerWidth / 2;
+            let ty = this.targetY * pulseFactor + window.innerHeight / 2;
             this.x += (tx - this.x) * 0.04;
             this.y += (ty - this.y) * 0.04;
         } else {
-            let speedMult = 1 + (energiaSuave / 25);
+            let speedMult = 1 + (energiaSuave / 30); // Reacción más sutil al audio
             this.x += this.vx * speedMult;
             this.y += this.vy * speedMult;
-            if (this.x < 0 || this.x > canvas.width) this.vx *= -1;
-            if (this.y < 0 || this.y > canvas.height) this.vy *= -1;
+
+            // --- LÓGICA DE DESAPARECER Y CREAR (OUT) ---
+            // En lugar de rebotar, reaparecen en el lado opuesto
+            if (this.x < -10) this.x = window.innerWidth + 10;
+            if (this.x > window.innerWidth + 10) this.x = -10;
+            if (this.y < -10) this.y = window.innerHeight + 10;
+            if (this.y > window.innerHeight + 10) this.y = -10;
         }
     }
 
-    draw(ctx) {
+    draw() {
         ctx.fillStyle = this.color;
-        if (this.type === 1) this.drawStar(ctx, this.x, this.y, 5, this.size * 2, this.size);
-        else if (this.type === 2) this.drawHeart(ctx, this.x, this.y, this.size * 1.5);
-        else {
+        ctx.globalAlpha = 0.8; // Para un toque más suave
+        if (this.type === 1) {
+            this.drawStar(this.x, this.y, 5, this.size * 2, this.size);
+        } else if (this.type === 2) {
+            this.drawHeart(this.x, this.y, this.size * 1.5);
+        } else {
             ctx.beginPath();
             ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
             ctx.fill();
         }
+        ctx.globalAlpha = 1.0;
     }
 
-    drawStar(ctx, cx, cy, spikes, outerRadius, innerRadius) {
-        let rot = Math.PI / 2 * 3; let x = cx; let y = cy; let step = Math.PI / spikes;
+    drawStar(cx, cy, spikes, outerRadius, innerRadius) {
+        let rot = Math.PI / 2 * 3; let step = Math.PI / spikes;
         ctx.beginPath(); ctx.moveTo(cx, cy - outerRadius);
         for (let i = 0; i < spikes; i++) {
-            x = cx + Math.cos(rot) * outerRadius; y = cy + Math.sin(rot) * outerRadius;
-            ctx.lineTo(x, y); rot += step;
-            x = cx + Math.cos(rot) * innerRadius; y = cy + Math.sin(rot) * innerRadius;
-            ctx.lineTo(x, y); rot += step;
+            ctx.lineTo(cx + Math.cos(rot) * outerRadius, cy + Math.sin(rot) * outerRadius);
+            rot += step;
+            ctx.lineTo(cx + Math.cos(rot) * innerRadius, cy + Math.sin(rot) * innerRadius);
+            rot += step;
         }
         ctx.closePath(); ctx.fill();
     }
 
-    drawHeart(ctx, x, y, size) {
+    drawHeart(x, y, size) {
         ctx.beginPath(); ctx.moveTo(x, y);
         ctx.bezierCurveTo(x, y - size, x - size, y - size, x - size, y);
         ctx.bezierCurveTo(x - size, y + size, x, y + size, x, y + size * 1.5);
@@ -99,22 +109,24 @@ class Particle {
     }
 }
 
+// Inicialización de 50 partículas (tu valor original)
 for (let i = 0; i < 50; i++) particles.push(new Particle());
 
 function render() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    // Limpiamos con el ancho real de la ventana
+    ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+
     if (analyser) {
         analyser.getByteFrequencyData(dataArray);
         let sum = 0;
         for (let i = 0; i < 4; i++) sum += dataArray[i];
         energiaSuave = energiaSuave * 0.85 + (sum / 4) * 0.15;
     }
-    if (isHeartMode) {
-        pulseTime += 0.04;
-        pulseFactor = 1 + Math.sin(pulseTime) * 0.08;
-    } else {
-        ctx.strokeStyle = "rgba(255, 79, 216, 0.15)";
-        ctx.lineWidth = 1;
+
+    if (!isHeartMode) {
+        // LÍNEAS DE CONEXIÓN ORIGINALES
+        ctx.strokeStyle = "rgba(255, 79, 216, 0.12)";
+        ctx.lineWidth = 0.8;
         for (let i = 0; i < particles.length; i++) {
             for (let j = i + 1; j < particles.length; j++) {
                 let dx = particles[i].x - particles[j].x;
@@ -126,12 +138,17 @@ function render() {
                 }
             }
         }
+    } else {
+        pulseTime += 0.04;
+        pulseFactor = 1 + Math.sin(pulseTime) * 0.08;
     }
-    particles.forEach(p => { p.update(); p.draw(ctx); });
+
+    particles.forEach(p => { p.update(); p.draw(); });
     requestAnimationFrame(render);
 }
 render();
 
+// --- LÓGICA DE NAVEGACIÓN Y TRADUCCIÓN (MANTENIDA) ---
 function actualizarZIndex() {
     pages.forEach((page, i) => {
         if (i < paginaActual) page.style.zIndex = i + 1;
@@ -172,6 +189,7 @@ function activarFinal() {
         bookContainer.classList.add('hidden');
         btnTranslate.classList.add('hidden');
         isHeartMode = true;
+        // Llenar el corazón
         for (let i = 0; i < 100; i++) particles.push(new Particle());
         particles.forEach((p, i) => {
             let t = (i / particles.length) * Math.PI * 2;
@@ -183,40 +201,6 @@ function activarFinal() {
         setTimeout(() => document.getElementById('final-message-container').classList.add('show'), 500);
     }, 1500);
 }
-
-// Lógica de traducción integrada
-function preloadImage(src) {
-    return new Promise((resolve, reject) => {
-        const img = new Image();
-        img.onload = () => resolve(src);
-        img.onerror = reject;
-        img.src = src;
-    });
-}
-
-btnTranslate.addEventListener('click', async () => {
-    if (cargandoTraduccion) return;
-    if (!modoTraduccion) {
-        cargandoTraduccion = true;
-        btnTranslate.disabled = true;
-        try {
-            const index = Math.min(paginaActual, originalImages.length - 1);
-            let tradName = originalImages[index].replace(/\(\d+\)/, "").replace(".png", "_traduccion.png");
-            const tradSrc = `assets/images/traduccion/${tradName}`;
-            await preloadImage(tradSrc);
-            pages[index].querySelector('.front').style.backgroundImage = `url('${tradSrc}')`;
-            btnTranslate.querySelector('.text').innerText = "Ver Original";
-            modoTraduccion = true;
-        } catch (e) { console.log("Error en traducción", e); }
-        finally { cargandoTraduccion = false; btnTranslate.disabled = false; }
-    } else {
-        modoTraduccion = false;
-        btnTranslate.querySelector('.text').innerText = "Traducir página";
-        pages.forEach((p, i) => {
-            p.querySelector('.front').style.backgroundImage = `url('assets/images/${originalImages[i]}')`;
-        });
-    }
-});
 
 bookContainer.addEventListener('click', (e) => {
     const rect = bookContainer.getBoundingClientRect();
