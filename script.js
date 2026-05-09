@@ -10,7 +10,7 @@ let isHeartMode = false;
 let pulseFactor = 1;
 let pulseTime = 0;
 
-// Audio Visualizer
+// Audio Visualizer (Valores de suavizado originales)
 let audioContext, analyser, dataArray, energiaSuave = 0;
 
 function resize() {
@@ -27,11 +27,24 @@ class Particle {
     init() {
         this.x = Math.random() * canvas.width;
         this.y = Math.random() * canvas.height;
-        this.vx = (Math.random() - 0.5) * 1.5;
-        this.vy = (Math.random() - 0.5) * 1.5;
-        this.size = Math.random() * 2 + 1;
-        this.type = Math.floor(Math.random() * 3); // 0: Circulo, 1: Estrella, 2: Corazón
-        this.color = Math.random() > 0.2 ? '#ff4fd8' : '#ffffff';
+        // Velocidad base de tu código original: ~1.2
+        this.vx = (Math.random() - 0.5) * 1.2;
+        this.vy = (Math.random() - 0.5) * 1.2;
+        this.size = Math.random() * 2 + 1; // Valor original de size
+        this.type = Math.floor(Math.random() * 3);
+
+        // Tonalidades rosas, blancas y moradas
+        const r = Math.random();
+        if (r < 0.55) {
+            this.color = '#ff4fd8'; // rosa
+        } else if (r < 0.8) {
+            this.color = '#ffffff'; // blanco
+        } else if (r < 0.92) {
+            this.color = '#b86bff'; // morado claro
+        } else {
+            this.color = '#7a2cff'; // morado más profundo
+        }
+
         this.targetX = null;
         this.targetY = null;
     }
@@ -40,12 +53,14 @@ class Particle {
         if (isHeartMode && this.targetX !== null) {
             let tx = this.targetX * pulseFactor + canvas.width / 2;
             let ty = this.targetY * pulseFactor + canvas.height / 2;
-            this.x += (tx - this.x) * 0.05;
-            this.y += (ty - this.y) * 0.05;
+            this.x += (tx - this.x) * 0.04;
+            this.y += (ty - this.y) * 0.04;
         } else {
-            let speedMult = 1 + (energiaSuave / 15);
+            // Reacción al audio suavizada (energiaSuave / 20 según tu original)
+            let speedMult = 1 + (energiaSuave / 25);
             this.x += this.vx * speedMult;
             this.y += this.vy * speedMult;
+
             if (this.x < 0 || this.x > canvas.width) this.vx *= -1;
             if (this.y < 0 || this.y > canvas.height) this.vy *= -1;
         }
@@ -53,9 +68,11 @@ class Particle {
 
     draw(ctx) {
         ctx.fillStyle = this.color;
-        if (this.type === 1) { // Estrella
+
+        // Mantener formas visibles también durante la navegación
+        if (this.type === 1) {
             this.drawStar(ctx, this.x, this.y, 5, this.size * 2, this.size);
-        } else if (this.type === 2) { // Corazón pequeño
+        } else if (this.type === 2) {
             this.drawHeart(ctx, this.x, this.y, this.size * 1.5);
         } else {
             ctx.beginPath();
@@ -65,30 +82,19 @@ class Particle {
     }
 
     drawStar(ctx, cx, cy, spikes, outerRadius, innerRadius) {
-        let rot = Math.PI / 2 * 3;
-        let x = cx;
-        let y = cy;
-        let step = Math.PI / spikes;
-        ctx.beginPath();
-        ctx.moveTo(cx, cy - outerRadius);
+        let rot = Math.PI / 2 * 3; let x = cx; let y = cy; let step = Math.PI / spikes;
+        ctx.beginPath(); ctx.moveTo(cx, cy - outerRadius);
         for (let i = 0; i < spikes; i++) {
-            x = cx + Math.cos(rot) * outerRadius;
-            y = cy + Math.sin(rot) * outerRadius;
-            ctx.lineTo(x, y);
-            rot += step;
-            x = cx + Math.cos(rot) * innerRadius;
-            y = cy + Math.sin(rot) * innerRadius;
-            ctx.lineTo(x, y);
-            rot += step;
+            x = cx + Math.cos(rot) * outerRadius; y = cy + Math.sin(rot) * outerRadius;
+            ctx.lineTo(x, y); rot += step;
+            x = cx + Math.cos(rot) * innerRadius; y = cy + Math.sin(rot) * innerRadius;
+            ctx.lineTo(x, y); rot += step;
         }
-        ctx.lineTo(cx, cy - outerRadius);
-        ctx.closePath();
-        ctx.fill();
+        ctx.closePath(); ctx.fill();
     }
 
     drawHeart(ctx, x, y, size) {
-        ctx.beginPath();
-        ctx.moveTo(x, y);
+        ctx.beginPath(); ctx.moveTo(x, y);
         ctx.bezierCurveTo(x, y - size, x - size, y - size, x - size, y);
         ctx.bezierCurveTo(x - size, y + size, x, y + size, x, y + size * 1.5);
         ctx.bezierCurveTo(x, y + size, x + size, y + size, x + size, y);
@@ -97,7 +103,8 @@ class Particle {
     }
 }
 
-for (let i = 0; i < 200; i++) particles.push(new Particle());
+// Cantidad original: 50 partículas
+for (let i = 0; i < 50; i++) particles.push(new Particle());
 
 function render() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -106,14 +113,15 @@ function render() {
         analyser.getByteFrequencyData(dataArray);
         let sum = 0;
         for (let i = 0; i < 4; i++) sum += dataArray[i];
-        energiaSuave = energiaSuave * 0.8 + (sum / 4) * 0.2;
+        // Suavizado dinámico original (0.85 y 0.15)
+        energiaSuave = energiaSuave * 0.85 + (sum / 4) * 0.15;
     }
 
     if (isHeartMode) {
-        pulseTime += 0.05;
-        pulseFactor = 1 + Math.sin(pulseTime) * 0.1;
+        pulseTime += 0.04;
+        pulseFactor = 1 + Math.sin(pulseTime) * 0.08;
     } else {
-        // LINEAS CONECTADAS (Tus partículas originales)
+        // LINEAS CONECTADAS: Distancia 100 y opacidad 0.15 (Tus valores exactos)
         ctx.strokeStyle = "rgba(255, 79, 216, 0.15)";
         ctx.lineWidth = 1;
         for (let i = 0; i < particles.length; i++) {
@@ -122,30 +130,22 @@ function render() {
                 let dy = particles[i].y - particles[j].y;
                 let dist = Math.sqrt(dx * dx + dy * dy);
                 if (dist < 100) {
-                    ctx.beginPath();
-                    ctx.moveTo(particles[i].x, particles[i].y);
-                    ctx.lineTo(particles[j].x, particles[j].y);
-                    ctx.stroke();
+                    ctx.beginPath(); ctx.moveTo(particles[i].x, particles[i].y);
+                    ctx.lineTo(particles[j].x, particles[j].y); ctx.stroke();
                 }
             }
         }
     }
 
-    particles.forEach(p => {
-        p.update();
-        p.draw(ctx);
-    });
+    particles.forEach(p => { p.update(); p.draw(ctx); });
     requestAnimationFrame(render);
 }
 render();
 
 function actualizarZIndex() {
     pages.forEach((page, i) => {
-        if (i < paginaActual) {
-            page.style.zIndex = i + 1; // Paginas ya pasadas
-        } else {
-            page.style.zIndex = pages.length - i; // Paginas por pasar (la actual encima)
-        }
+        if (i < paginaActual) page.style.zIndex = i + 1;
+        else page.style.zIndex = pages.length - i;
     });
 }
 
@@ -157,8 +157,7 @@ function cambiarPagina(dir) {
             const source = audioContext.createMediaElementSource(audio);
             analyser.fftSize = 64;
             dataArray = new Uint8Array(analyser.frequencyBinCount);
-            source.connect(analyser);
-            analyser.connect(audioContext.destination);
+            source.connect(analyser); analyser.connect(audioContext.destination);
         }
 
         pages[paginaActual].classList.add('flipped');
@@ -174,22 +173,19 @@ function cambiarPagina(dir) {
     }
 }
 
-function getHeartPoint(t) {
-    let x = 16 * Math.pow(Math.sin(t), 3);
-    let y = -(13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t));
-    return { x: x * 13, y: y * 13 };
-}
-
 function activarFinal() {
     bookContainer.style.opacity = "0";
     setTimeout(() => {
         bookContainer.classList.add('hidden');
         isHeartMode = true;
+        // Aumentamos partículas solo para el corazón para que se vea lleno
+        for (let i = 0; i < 100; i++) particles.push(new Particle());
+        
         particles.forEach((p, i) => {
             let t = (i / particles.length) * Math.PI * 2;
-            let pos = getHeartPoint(t);
-            p.targetX = pos.x; p.targetY = pos.y;
-            p.size += 1;
+            let x = 16 * Math.pow(Math.sin(t), 3);
+            let y = -(13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t));
+            p.targetX = x * 13; p.targetY = y * 13;
         });
         document.getElementById('final-message-container').classList.remove('hidden');
         setTimeout(() => document.getElementById('final-message-container').classList.add('show'), 500);
