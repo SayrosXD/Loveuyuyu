@@ -13,7 +13,12 @@ let pulseTime = 0;
 let energiaSuave = 0;
 let audioContext, analyser, dataArray;
 
-// --- CONFIGURACIÓN DE NITIDEZ ---
+let modoTraduccion = false;
+const originalImages = [
+    'inicio.png', 'teamo(1).png', 'carta(2).png', 'lisa(3).png',
+    'jennie(4).png', 'jisoo(5).png', 'rose(6).png', 'final(7).png'
+];
+
 function resize() {
     const dpr = window.devicePixelRatio || 1;
     canvas.width = window.innerWidth * dpr;
@@ -32,15 +37,16 @@ class Particle {
     init() {
         this.x = Math.random() * window.innerWidth;
         this.y = Math.random() * window.innerHeight;
+        this.vx = (Math.random() - 0.5) * 0.7; 
+        this.vy = (Math.random() - 0.5) * 0.7;
         
-        // Velocidad original: estable y pausada
-        this.vx = (Math.random() - 0.5) * 1.0; 
-        this.vy = (Math.random() - 0.5) * 1.0;
-        
-        // Tamaño base y lógica de parpadeo/crecimiento
-        this.baseSize = Math.random() * 1.5 + 0.5;
+        // Tamaño base más pequeño para elegancia
+        this.baseSize = Math.random() * 1.1 + 0.6;
         this.size = this.baseSize;
-        this.growing = Math.random() > 0.5;
+        
+        // --- NUEVO: Ritmo aleatorio individual ---
+        this.sizeSpeed = Math.random() * 0.015 + 0.005; 
+        this.angle = Math.random() * Math.PI * 2; 
         
         this.type = Math.floor(Math.random() * 3);
 
@@ -61,44 +67,37 @@ class Particle {
             this.x += (tx - this.x) * 0.04;
             this.y += (ty - this.y) * 0.04;
         } else {
-            // 1. Variación aleatoria de tamaño (como en tu original)
-            if (this.growing) {
-                this.size += 0.01;
-                if (this.size > this.baseSize + 1) this.growing = false;
-            } else {
-                this.size -= 0.01;
-                if (this.size < this.baseSize) this.growing = true;
-            }
+            // 1. Latido aleatorio independiente (Respiración)
+            this.angle += this.sizeSpeed;
+            // Oscila entre el tamaño base y un pequeño extra
+            let oscilacionSutil = Math.sin(this.angle) * 0.4;
+            
+            // 2. Impulso sutil de música (Solo si hay audio)
+            let impulsoAudio = (energiaSuave / 70); 
 
-            // 2. Reacción al Audio: Velocidad y Tamaño (Valores rescatados de tu script)
-            let speedMult = 1 + (energiaSuave / 15); 
-            let audioSizeMult = 1 + (energiaSuave / 20); 
+            this.size = this.baseSize + oscilacionSutil + impulsoAudio;
 
-            this.x += this.vx * speedMult;
-            this.y += this.vy * speedMult;
+            this.x += this.vx * (1 + energiaSuave / 50);
+            this.y += this.vy * (1 + energiaSuave / 50);
 
-            // 3. Comportamiento "Out" (reaparecer)
             if (this.x < -10) this.x = window.innerWidth + 10;
             if (this.x > window.innerWidth + 10) this.x = -10;
             if (this.y < -10) this.y = window.innerHeight + 10;
             if (this.y > window.innerHeight + 10) this.y = -10;
-
-            this.currentRenderSize = this.size * audioSizeMult;
         }
     }
 
     draw() {
         ctx.fillStyle = this.color;
-        ctx.globalAlpha = 0.7; 
-        const renderSize = isHeartMode ? this.size * 1.5 : this.currentRenderSize;
-
+        ctx.globalAlpha = isHeartMode ? 0.8 : 0.65;
+        
         if (this.type === 1) {
-            this.drawStar(this.x, this.y, 5, renderSize * 2, renderSize);
+            this.drawStar(this.x, this.y, 5, this.size * 2, this.size);
         } else if (this.type === 2) {
-            this.drawHeart(this.x, this.y, renderSize * 1.5);
+            this.drawHeart(this.x, this.y, this.size * 1.5);
         } else {
             ctx.beginPath();
-            ctx.arc(this.x, this.y, renderSize, 0, Math.PI * 2);
+            ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
             ctx.fill();
         }
         ctx.globalAlpha = 1.0;
@@ -126,7 +125,7 @@ class Particle {
     }
 }
 
-for (let i = 0; i < 50; i++) particles.push(new Particle());
+for (let i = 0; i < 55; i++) particles.push(new Particle());
 
 function render() {
     ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
@@ -139,14 +138,14 @@ function render() {
     }
 
     if (!isHeartMode) {
-        ctx.strokeStyle = "rgba(255, 79, 216, 0.12)";
-        ctx.lineWidth = 0.8;
+        ctx.strokeStyle = "rgba(255, 79, 216, 0.08)";
+        ctx.lineWidth = 0.5;
         for (let i = 0; i < particles.length; i++) {
             for (let j = i + 1; j < particles.length; j++) {
                 let dx = particles[i].x - particles[j].x;
                 let dy = particles[i].y - particles[j].y;
                 let dist = Math.sqrt(dx * dx + dy * dy);
-                if (dist < 110) {
+                if (dist < 100) {
                     ctx.beginPath(); ctx.moveTo(particles[i].x, particles[i].y);
                     ctx.lineTo(particles[j].x, particles[j].y); ctx.stroke();
                 }
@@ -162,8 +161,32 @@ function render() {
 }
 render();
 
-// Navegación (Izquierda: Atrás / Derecha: Adelante)
+// --- LÓGICA DE TRADUCCIÓN REPARADA ---
+btnTranslate.addEventListener('click', () => {
+    // Buscamos la página que está visible actualmente (sin la clase flipped)
+    // O si estamos navegando, la página que corresponde al índice actual
+    const currentIdx = Math.min(paginaActual, originalImages.length - 1);
+    const frontSide = pages[currentIdx].querySelector('.front');
+    
+    if (!modoTraduccion) {
+        let originalName = originalImages[currentIdx];
+        let tradName = originalName.replace(".png", "_traduccion.png").replace(/\(\d+\)/, "");
+        
+        frontSide.style.backgroundImage = `url('assets/images/traduccion/${tradName}')`;
+        btnTranslate.querySelector('.text').innerText = "Ver Original";
+        modoTraduccion = true;
+    } else {
+        frontSide.style.backgroundImage = `url('assets/images/${originalImages[currentIdx]}')`;
+        btnTranslate.querySelector('.text').innerText = "Traducir página";
+        modoTraduccion = false;
+    }
+});
+
 function cambiarPagina(dir) {
+    // Resetear visualmente el botón al cambiar página
+    modoTraduccion = false;
+    btnTranslate.querySelector('.text').innerText = "Traducir página";
+
     if (dir === 'adelante' && paginaActual < pages.length) {
         if (!audioContext) {
             audioContext = new (window.AudioContext || window.webkitAudioContext)();
@@ -196,7 +219,7 @@ function activarFinal() {
         bookContainer.style.display = 'none';
         btnTranslate.style.display = 'none';
         isHeartMode = true;
-        for (let i = 0; i < 120; i++) particles.push(new Particle());
+        for (let i = 0; i < 100; i++) particles.push(new Particle());
         particles.forEach((p, i) => {
             let t = (i / particles.length) * Math.PI * 2;
             let x = 16 * Math.pow(Math.sin(t), 3);
