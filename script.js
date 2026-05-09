@@ -3,15 +3,13 @@ const book = document.querySelector('.book');
 const bookContainer = document.querySelector('.book-container') || book;
 const audio = document.getElementById('bg-music');
 const btnTranslate = document.getElementById('btn-translate');
-const finalMsg = document.getElementById('final-message-container');
 
 let modoTraduccion = false;
 let cargandoTraduccion = false;
 let paginaActual = 0;
-let finalActivado = false;
 
 /* =========================
-   AUDIO VISUALIZER
+   NUEVO: AUDIO VISUALIZER
    ========================= */
 let audioContext = null;
 let analyser = null;
@@ -20,18 +18,7 @@ let mediaSource = null;
 let energiaSuave = 0;
 let animationId = null;
 
-/* =========================
-   FINAL HEART CANVAS
-   ========================= */
-let heartCanvas = null;
-let heartCtx = null;
-let heartParticles = [];
-let heartPulse = 0;
-let heartFrame = null;
-
-/* =========================
-   Array con los nombres originales exactos para la restauración
-   ========================= */
+// Array con los nombres originales exactos para la restauración
 const originalImages = [
     'inicio.png', 'teamo(1).png', 'carta(2).png', 'lisa(3).png',
     'jennie(4).png', 'jisoo(5).png', 'rose(6).png', 'final(7).png'
@@ -59,7 +46,7 @@ window.addEventListener('load', () => {
 });
 
 /* =========================
-   INICIALIZAR ANALIZADOR
+   NUEVO: INICIALIZAR ANALIZADOR
    ========================= */
 function iniciarAnalizadorAudio() {
     if (audioContext) return;
@@ -81,7 +68,7 @@ function iniciarAnalizadorAudio() {
 }
 
 /* =========================
-   LOOP DEL VISUALIZER
+   NUEVO: LOOP DEL VISUALIZER
    ========================= */
 function actualizarParticulasConAudio() {
     animationId = requestAnimationFrame(actualizarParticulasConAudio);
@@ -115,7 +102,7 @@ function actualizarParticulasConAudio() {
     }
 }
 
-// --- NAVEGACIÓN Y AUDIO ---
+// --- 1. NAVEGACIÓN Y AUDIO ---
 function playMusic(source) {
     if (!source || !audio) return;
 
@@ -132,14 +119,14 @@ function playMusic(source) {
     // Si ya está sonando esa misma pista, no la recargues
     if (audio.src === nextSrc) {
         if (audio.paused) {
-            audio.play().catch(() => {});
+            audio.play().catch(() => console.log("Audio en espera"));
         }
         return;
     }
 
     audio.src = nextSrc;
     audio.loop = true;
-    audio.play().catch(() => {});
+    audio.play().catch(() => console.log("Audio en espera"));
 }
 
 function actualizarZIndex() {
@@ -160,7 +147,6 @@ function volverPagina(pageToBack, pageIndex) {
 
 function avanzarPagina() {
     if (paginaActual >= pages.length) return;
-    if (finalActivado) return;
 
     if (modoTraduccion) desactivarTraduccionGlobal();
 
@@ -179,15 +165,10 @@ function avanzarPagina() {
     if (nextSong) playMusic(nextSong);
 
     setTimeout(actualizarZIndex, 1150);
-
-    if (paginaActual === pages.length) {
-        activarFinal();
-    }
 }
 
 function retrocederPagina() {
     if (paginaActual <= 0) return;
-    if (finalActivado) return;
 
     if (modoTraduccion) desactivarTraduccionGlobal();
 
@@ -216,7 +197,6 @@ pages.forEach((page, index) => {
 
 if (bookContainer) {
     bookContainer.addEventListener('click', (e) => {
-        if (finalActivado) return;
         if (e.target.closest('#btn-translate')) return;
 
         const rect = bookContainer.getBoundingClientRect();
@@ -232,12 +212,12 @@ if (bookContainer) {
 
 actualizarZIndex();
 
-// --- SISTEMA DE TRADUCCIÓN DINÁMICO ---
+// --- 2. SISTEMA DE TRADUCCIÓN DINÁMICO ---
 btnTranslate.addEventListener('click', async (e) => {
     e.preventDefault();
     e.stopPropagation();
 
-    if (cargandoTraduccion || finalActivado) return;
+    if (cargandoTraduccion) return;
 
     const pageActiva = pages[paginaActual] || Array.from(pages).find(p => !p.classList.contains('flipped'));
     if (!pageActiva) return;
@@ -285,70 +265,70 @@ function desactivarTraduccionGlobal() {
 
     pages.forEach((p, i) => {
         const front = p.querySelector('.front');
-        if (front && front.style.backgroundImage.includes('traduccion/')) {
+        if (front.style.backgroundImage.includes('traduccion/')) {
             front.style.backgroundImage = `url('assets/images/${originalImages[i]}')`;
         }
     });
 }
 
-// --- PARTICULAS VERSIÓN BLACKPINK ULTIMATE ---
+// --- 3. PARTICULAS VERSIÓN BLACKPINK ULTIMATE ---
 if (typeof particlesJS !== 'undefined') {
     particlesJS("particles-js", {
-        particles: {
-            number: { value: 110, density: { enable: true, value_area: 900 } },
-            color: {
+        "particles": {
+            "number": { "value": 110, "density": { "enable": true, "value_area": 900 } },
+            "color": {
                 // Paleta: Rosa BP, Blanco, Morado y Rosa suave
-                value: ["#ff4fd8", "#ffffff", "#a855f7", "#ffb7ff"]
+                "value": ["#ff4fd8", "#ffffff", "#a855f7", "#ffb7ff"]
             },
-            shape: {
+            "shape": {
                 // Ahora mezclamos Círculos, Estrellas e IMÁGENES (el corazón)
-                type: ["circle", "star", "image"],
-                image: {
+                "type": ["circle", "star", "image"],
+                "image": {
                     // SVG de corazón en base64 para que no necesites archivos extra
-                    src: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj48cGF0aCBmaWxsPSIjZmY0ZmQ4IiBkPSJNNDcuNiAzMDAuNEwyMjguMyA0NjkuMWM3LjUgNyAxNy40IDEwLjkgMjcuNyAxMC45czIwLjItMy45IDI3LjctMTAuOUw0NjQuNCAzMDAuNEM0OTQuOCAyNzIuMSA1MTIgMjMyLjQgNTEyIDE5MC45di01LjhjMC02OS45LTUwLjUtMTI5LjUtMTE5LjQtMTQxQzM0NyAzNi41IDMwMC42IDUxLjQgMjY4IDg0TDI1NiA5NkwyNDQgODRjLTMyLjYtMzIuNi03OS00Ny41LTEyNC42LTM5LjlDNTAuNSA1NS42IDAgMTE1LjIgMCAxODUuMXY1LjhjMCA0MS41IDE3LjIgODEuMiA0Ny42IDEwOS41eiIvPjwvc3ZnPg==",
-                    width: 100,
-                    height: 100
+                    "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj48cGF0aCBmaWxsPSIjZmY0ZmQ4IiBkPSJNNDcuNiAzMDAuNEwyMjguMyA0NjkuMWM3LjUgNyAxNy40IDEwLjkgMjcuNyAxMC45czIwLjItMy45IDI3LjctMTAuOUw0NjQuNCAzMDAuNEM0OTQuOCAyNzIuMSA1MTIgMjMyLjQgNTEyIDE5MC45di01LjhjMC02OS45LTUwLjUtMTI5LjUtMTE5LjQtMTQxQzM0NyAzNi41IDMwMC42IDUxLjQgMjY4IDg0TDI1NiA5NkwyNDQgODRjLTMyLjYtMzIuNi03OS00Ny41LTEyNC42LTM5LjlDNTAuNSA1NS42IDAgMTE1LjIgMCAxODUuMXY1LjhjMCA0MS41IDE3LjIgODEuMiA0Ny42IDEwOS41eiIvPjwvc3ZnPg==",
+                    "width": 100,
+                    "height": 100
                 }
             },
-            opacity: {
-                value: 0.7,
-                random: true,
-                anim: { enable: true, speed: 1, opacity_min: 0.2, sync: false }
+            "opacity": {
+                "value": 0.7,
+                "random": true,
+                "anim": { "enable": true, "speed": 1, "opacity_min": 0.2, "sync": false }
             },
-            size: {
-                value: 3.5,
-                random: true,
-                anim: { enable: true, speed: 4, size_min: 0.3, sync: false }
+            "size": {
+                "value": 3.5,
+                "random": true,
+                "anim": { "enable": true, "speed": 4, "size_min": 0.3, "sync": false }
             },
-            line_linked: {
-                enable: true,
-                distance: 120,
-                color: "#ff4fd8",
-                opacity: 0.25,
-                width: 1
+            "line_linked": {
+                "enable": true,
+                "distance": 120,
+                "color": "#ff4fd8",
+                "opacity": 0.25,
+                "width": 1
             },
-            move: {
-                enable: true,
-                speed: 1.8,
-                direction: "none",
-                random: true,
-                straight: false,
-                out_mode: "out",
-                bounce: false
+            "move": {
+                "enable": true,
+                "speed": 1.8,
+                "direction": "none",
+                "random": true,
+                "straight": false,
+                "out_mode": "out",
+                "bounce": false
             }
         },
-        interactivity: {
-            detect_on: "canvas",
-            events: {
-                onhover: { enable: true, mode: "bubble" },
-                onclick: { enable: true, mode: "push" }
+        "interactivity": {
+            "detect_on": "canvas",
+            "events": {
+                "onhover": { "enable": true, "mode": "bubble" },
+                "onclick": { "enable": true, "mode": "push" }
             },
-            modes: {
-                bubble: { distance: 200, size: 8, duration: 2, opacity: 1, speed: 3 },
-                push: { particles_nb: 4 }
+            "modes": {
+                "bubble": { "distance": 200, "size": 8, "duration": 2, "opacity": 1, "speed": 3 },
+                "push": { "particles_nb": 4 }
             }
         },
-        retina_detect: true
+        "retina_detect": true
     });
 }
 
@@ -382,105 +362,4 @@ function actualizarParticulasConAudio() {
         pJS.particles.line_linked.opacity = 0.1 + (energiaSuave / 400);
     }
 }
-
-/* =========================
-   FINAL CON CANVAS INDEPENDIENTE
-   ========================= */
-function activarFinal() {
-    if (finalActivado) return;
-    finalActivado = true;
-
-    modoTraduccion = false;
-    btnTranslate.style.display = "none";
-
-    bookContainer.style.opacity = "0";
-    bookContainer.style.pointerEvents = "none";
-
-    setTimeout(() => {
-        bookContainer.style.display = "none";
-        crearCorazonFinal();
-
-        if (finalMsg) {
-            finalMsg.classList.remove('hidden');
-            setTimeout(() => finalMsg.classList.add('show'), 300);
-        }
-    }, 1500);
-}
-
-function crearCorazonFinal() {
-    const overlay = document.createElement('div');
-    overlay.id = 'final-overlay';
-    document.body.appendChild(overlay);
-
-    heartCanvas = document.createElement('canvas');
-    heartCanvas.style.position = 'absolute';
-    heartCanvas.style.inset = '0';
-    heartCanvas.style.width = '100%';
-    heartCanvas.style.height = '100%';
-    heartCanvas.style.display = 'block';
-    overlay.appendChild(heartCanvas);
-
-    heartCtx = heartCanvas.getContext('2d');
-
-    const resize = () => {
-        heartCanvas.width = window.innerWidth;
-        heartCanvas.height = window.innerHeight;
-    };
-
-    resize();
-    window.addEventListener('resize', resize, { passive: true });
-
-    class Particle {
-        constructor(tx, ty) {
-            this.x = Math.random() * heartCanvas.width;
-            this.y = Math.random() * heartCanvas.height;
-            this.tx = tx;
-            this.ty = ty;
-            this.size = Math.random() * 2 + 1;
-        }
-
-        update() {
-            const scale = 1 + Math.sin(heartPulse) * 0.1;
-            const targetX = this.tx * scale + heartCanvas.width / 2;
-            const targetY = this.ty * scale + heartCanvas.height / 2;
-            this.x += (targetX - this.x) * 0.05;
-            this.y += (targetY - this.y) * 0.05;
-        }
-
-        draw() {
-            heartCtx.fillStyle = "#ff4fd8";
-            heartCtx.beginPath();
-            heartCtx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-            heartCtx.fill();
-        }
-    }
-
-    heartParticles = [];
-    for (let i = 0; i < 200; i++) {
-        const t = (i / 200) * Math.PI * 2;
-        const x = 16 * Math.pow(Math.sin(t), 3);
-        const y = -(13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t));
-        heartParticles.push(new Particle(x * 13, y * 13));
-    }
-
-    const render = () => {
-        if (!heartCtx || !heartCanvas) return;
-
-        heartCtx.clearRect(0, 0, heartCanvas.width, heartCanvas.height);
-
-        heartPulse += 0.05;
-        heartParticles.forEach(p => {
-            p.update();
-            p.draw();
-        });
-
-        heartFrame = requestAnimationFrame(render);
-    };
-
-    render();
-}
-
-// Iniciar al cargar
-window.addEventListener('load', () => {
-    actualizarZIndex();
-});
+ 
