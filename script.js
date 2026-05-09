@@ -272,45 +272,41 @@ if (typeof particlesJS !== 'undefined') {
   particlesJS("particles-js", {
     particles: {
       number: {
-        value: 85,
-        density: { enable: true, value_area: 900 }
+        value: 62,
+        density: { enable: true, value_area: 1000 }
       },
       color: {
-        value: ["#ff4fd8", "#ffffff", "#d36bff"]
+        value: ["#ff4fd8", "#ffffff", "#ff8bd6", "#d36bff"]
       },
       shape: {
         type: ["circle", "star"]
       },
       opacity: {
-        value: 0.45,
+        value: 0.42,
         random: true,
         anim: {
           enable: true,
-          speed: 0.5,
-          opacity_min: 0.12,
+          speed: 0.7,
+          opacity_min: 0.08,
           sync: false
         }
       },
       size: {
-        value: 2.6,
+        value: 1.9,
         random: true,
         anim: {
           enable: true,
-          speed: 2.2,
-          size_min: 0.5,
+          speed: 1.6,
+          size_min: 0.45,
           sync: false
         }
       },
       line_linked: {
-        enable: true,
-        distance: 130,
-        color: "#ff4fd8",
-        opacity: 0.16,
-        width: 1
+        enable: false
       },
       move: {
         enable: true,
-        speed: 1.2,
+        speed: 0.9,
         direction: "none",
         random: true,
         straight: false,
@@ -327,14 +323,14 @@ if (typeof particlesJS !== 'undefined') {
       },
       modes: {
         grab: {
-          distance: 170,
-          line_linked: { opacity: 0.35 }
+          distance: 150,
+          line_linked: { opacity: 0.15 }
         },
         push: {
-          particles_nb: 2
+          particles_nb: 1
         }
       }
     },
     retina_detect: true
   });
-}
+} 
