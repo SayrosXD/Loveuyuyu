@@ -8,6 +8,16 @@ let modoTraduccion = false;
 let cargandoTraduccion = false;
 let paginaActual = 0;
 
+/* =========================
+   NUEVO: AUDIO VISUALIZER
+   ========================= */
+let audioContext = null;
+let analyser = null;
+let dataArray = null;
+let mediaSource = null;
+let energiaSuave = 0;
+let animationId = null;
+
 // Array con los nombres originales exactos para la restauración
 const originalImages = [
     'inicio.png', 'teamo(1).png', 'carta(2).png', 'lisa(3).png',
@@ -35,10 +45,83 @@ window.addEventListener('load', () => {
     });
 });
 
+/* =========================
+   NUEVO: INICIALIZAR ANALIZADOR
+   ========================= */
+function iniciarAnalizadorAudio() {
+    if (audioContext) return;
+
+    audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    analyser = audioContext.createAnalyser();
+
+    // Valores bajos = más liviano y suficiente para reaccionar al ritmo
+    analyser.fftSize = 64;
+    analyser.smoothingTimeConstant = 0.85;
+
+    mediaSource = audioContext.createMediaElementSource(audio);
+    mediaSource.connect(analyser);
+    analyser.connect(audioContext.destination);
+
+    dataArray = new Uint8Array(analyser.frequencyBinCount);
+
+    actualizarParticulasConAudio();
+}
+
+/* =========================
+   NUEVO: LOOP DEL VISUALIZER
+   ========================= */
+function actualizarParticulasConAudio() {
+    animationId = requestAnimationFrame(actualizarParticulasConAudio);
+
+    if (!analyser || !dataArray) return;
+
+    analyser.getByteFrequencyData(dataArray);
+
+    // Tomamos solo frecuencias bajas para captar el pulso/beat
+    const bajos = Math.min(5, dataArray.length);
+    let suma = 0;
+
+    for (let i = 0; i < bajos; i++) {
+        suma += dataArray[i];
+    }
+
+    const promedio = bajos ? (suma / bajos) : 0;
+
+    // Suavizado para evitar saltos bruscos
+    energiaSuave = energiaSuave * 0.88 + promedio * 0.12;
+
+    // Mapeo: canción lenta = partículas lentas; canción intensa = más rápidas
+    const speed = Math.max(0.35, Math.min(8, 0.5 + (energiaSuave / 22)));
+
+    const pJS = window.pJSDom && window.pJSDom[0] && window.pJSDom[0].pJS;
+    if (pJS && pJS.particles && pJS.particles.move) {
+        pJS.particles.move.speed = speed;
+    }
+}
+
 // --- 1. NAVEGACIÓN Y AUDIO ---
 function playMusic(source) {
-    if (!source || audio.src.includes(source)) return;
-    audio.src = source;
+    if (!source || !audio) return;
+
+    // Normaliza la URL para comparar bien
+    const nextSrc = new URL(source, window.location.href).href;
+
+    // Iniciar el contexto solo con interacción del usuario
+    if (!audioContext) {
+        iniciarAnalizadorAudio();
+    } else if (audioContext.state === 'suspended') {
+        audioContext.resume().catch(() => {});
+    }
+
+    // Si ya está sonando esa misma pista, no la recargues
+    if (audio.src === nextSrc) {
+        if (audio.paused) {
+            audio.play().catch(() => console.log("Audio en espera"));
+        }
+        return;
+    }
+
+    audio.src = nextSrc;
     audio.loop = true;
     audio.play().catch(() => console.log("Audio en espera"));
 }
