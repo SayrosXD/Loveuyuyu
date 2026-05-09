@@ -146,3 +146,47 @@ body::before {
     filter: blur(20px);
     pointer-events: none;
 }
+
+/* Botón de traducción */
+.bp-translate-btn {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    background: rgba(0, 0, 0, 0.8);
+    color: #ff4fd8;
+    border: 2px solid #ff4fd8;
+    padding: 12px 20px;
+    border-radius: 50px;
+    cursor: pointer;
+    z-index: 9999;
+    font-family: 'Arial', sans-serif;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transition: all 0.3s ease;
+    box-shadow: 0 0 15px rgba(255, 79, 216, 0.4);
+}
+
+.bp-translate-btn:hover {
+    background: #ff4fd8;
+    color: #000;
+    box-shadow: 0 0 25px rgba(255, 79, 216, 0.8);
+    transform: scale(1.05);
+}
+
+.bp-translate-btn .icon {
+    font-size: 1.2rem;
+}
+
+/* Estilo personalizado para la ventana de traducción */
+.bp-swal-popup {
+    background: rgba(0, 0, 0, 0.95) !important;
+    border: 2px solid #ff4fd8 !important;
+    color: #fff !important;
+    border-radius: 20px !important;
+}
+
+.bp-swal-title {
+    color: #ff4fd8 !important;
+}
