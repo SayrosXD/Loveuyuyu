@@ -42,6 +42,22 @@ body {
     filter: drop-shadow(0 0 8px rgba(255, 79, 216, 0.18));
 }
 
+/* Efecto de resplandor mágico para el canvas de partículas */
+#particles-js canvas {
+    filter: drop-shadow(0 0 10px rgba(255, 79, 216, 0.4))
+            drop-shadow(0 0 5px rgba(168, 85, 247, 0.2));
+    animation: floating-glow 6s ease-in-out infinite;
+}
+
+@keyframes floating-glow {
+    0%, 100% {
+        filter: drop-shadow(0 0 10px rgba(255, 79, 216, 0.4));
+    }
+    50% {
+        filter: drop-shadow(0 0 20px rgba(255, 79, 216, 0.7)) brightness(1.2);
+    }
+}
+
 /* Capa sutil para dar más profundidad */
 body::before {
     content: "";
