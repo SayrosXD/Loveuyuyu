@@ -1,104 +1,68 @@
-const pages = document.querySelectorAll('.page');
-const audio = document.getElementById('bg-music');
+// --- LÓGICA DEL TRADUCTOR BLACKPINK ---
 
-// Forzamos que el audio siempre intente loopear la canción actual
-audio.loop = true;
+document.getElementById('btn-translate').addEventListener('click', async function() {
+    // 1. Identificar la página que está al frente (la que no tiene la clase flipped)
+    const allPages = Array.from(document.querySelectorAll('.page'));
+    const activePageElement = allPages.find(p => !p.classList.contains('flipped'));
 
-pages.forEach((page, index) => {
-    page.style.zIndex = pages.length - index;
+    if (!activePageElement) return;
 
-    page.addEventListener('click', (e) => {
-        // Detectar si el clic es para avanzar o retroceder (según tu lógica de bordes anterior)
-        const rect = page.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const width = rect.width;
+    // Obtener la URL de la imagen del 'front' de esa página
+    const frontDiv = activePageElement.querySelector('.front');
+    const style = window.getComputedStyle(frontDiv);
+    const bgUrl = style.backgroundImage.slice(5, -2).replace(/"/g, "");
 
-        // AVANZAR (Borde derecho)
-        if (x > width * 0.7 && !page.classList.contains('flipped')) {
-            page.classList.add('flipped');
-            setTimeout(() => { page.style.zIndex = index + 1; }, 600);
-
-            const nextSong = pages[index + 1]?.getAttribute('data-song');
-            if (nextSong) playMusic(nextSong);
-        } 
-        // RETROCEDER (Borde izquierdo)
-        else if (x < width * 0.3 && page.classList.contains('flipped')) {
-            page.classList.remove('flipped');
-            page.style.zIndex = pages.length - index;
-
-            const currentSong = page.getAttribute('data-song');
-            if (currentSong) playMusic(currentSong);
-        }
-    });
-});
-
-function playMusic(source) {
-    if (!source || source === "") {
-        audio.pause();
+    if (!bgUrl || bgUrl === "one") {
+        Swal.fire({
+            title: 'Ups!',
+            text: 'No hay texto detectable en esta página.',
+            icon: 'info',
+            confirmButtonColor: '#ff4fd8'
+        });
         return;
     }
 
-    // Si la canción ya es la que está sonando, no hacemos nada (sigue en bucle)
-    if (audio.src.includes(source)) return;
+    // 2. Mostrar estado de carga
+    Swal.fire({
+        title: 'Analizando imagen...',
+        html: 'Buscando texto en la página',
+        allowOutsideClick: false,
+        didOpen: () => { Swal.showLoading(); },
+        customClass: { popup: 'bp-swal-popup', title: 'bp-swal-title' }
+    });
 
-    audio.src = source;
-    audio.loop = true; // Aseguramos que el bucle esté activo para la nueva fuente
-    
-    const playPromise = audio.play();
+    try {
+        // 3. Tesseract OCR (Reconoce inglés y coreano por defecto)
+        const worker = await Tesseract.createWorker('eng+kor');
+        const { data: { text } } = await worker.recognize(bgUrl);
+        await worker.terminate();
 
-    if (playPromise !== undefined) {
-        playPromise.then(() => {
-            console.log("Reproduciendo en bucle: " + source);
-        }).catch(() => {
-            console.log("Aviso: Interacción necesaria para iniciar audio.");
+        if (!text.trim()) {
+            throw new Error("No se encontró texto");
+        }
+
+        // 4. Traducir usando la API de Google (Gratuita para este uso)
+        const response = await fetch(`https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=es&dt=t&q=${encodeURIComponent(text)}`);
+        const result = await response.json();
+        const translatedText = result[0].map(item => item[0]).join("");
+
+        // 5. Mostrar resultado final
+        Swal.fire({
+            title: 'Traducción',
+            text: translatedText,
+            confirmButtonText: 'Entendido',
+            confirmButtonColor: '#ff4fd8',
+            customClass: { popup: 'bp-swal-popup', title: 'bp-swal-title' }
+        });
+
+    } catch (error) {
+        console.error(error);
+        Swal.fire({
+            title: 'Error',
+            text: 'No pudimos leer el texto. Asegúrate de que la imagen sea clara.',
+            icon: 'error',
+            confirmButtonColor: '#ff4fd8',
+            customClass: { popup: 'bp-swal-popup', title: 'bp-swal-title' }
         });
     }
-}
-
-// --- Partículas estilo BLACKPINK ---
-particlesJS("particles-js", {
-    particles: {
-        number: { value: 80, density: { enable: true, value_area: 1000 } },
-        color: { value: ["#ff4fd8", "#ff8bd6", "#ffffff"] },
-        shape: { type: ["circle", "star"] },
-        opacity: {
-            value: 0.7,
-            random: true,
-            anim: { enable: true, speed: 0.6, opacity_min: 0.15, sync: false }
-        },
-        size: {
-            value: 2.2,
-            random: true,
-            anim: { enable: true, speed: 1.5, size_min: 0.3, sync: false }
-        },
-        line_linked: {
-            enable: true,
-            distance: 140,
-            color: "#ff4fd8",
-            opacity: 0.14,
-            width: 1
-        },
-        move: {
-            enable: true,
-            speed: 0.7,
-            direction: "none",
-            random: true,
-            straight: false,
-            out_mode: "out",
-            bounce: false
-        }
-    },
-    interactivity: {
-        detect_on: "canvas",
-        events: {
-            onhover: { enable: true, mode: "repulse" },
-            onclick: { enable: true, mode: "push" },
-            resize: true
-        },
-        modes: {
-            repulse: { distance: 100, duration: 0.4 },
-            push: { particles_nb: 2 }
-        }
-    },
-    retina_detect: true
 });
