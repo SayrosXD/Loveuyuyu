@@ -1,5 +1,6 @@
 const pages = [...document.querySelectorAll('.page')];
 const book = document.querySelector('.book');
+const bookContainer = document.querySelector('.book-container') || book;
 const audio = document.getElementById('bg-music');
 const btnTranslate = document.getElementById('btn-translate');
 
@@ -9,7 +10,7 @@ let paginaActual = 0;
 
 // Array con los nombres originales exactos para la restauración
 const originalImages = [
-    'inicio.png', 'teamo(1).png', 'carta(2).png', 'lisa(3).png', 
+    'inicio.png', 'teamo(1).png', 'carta(2).png', 'lisa(3).png',
     'jennie(4).png', 'jisoo(5).png', 'rose(6).png', 'final(7).png'
 ];
 
@@ -44,9 +45,7 @@ function playMusic(source) {
 
 function actualizarZIndex() {
     pages.forEach((page, i) => {
-        page.style.zIndex = page.classList.contains('flipped')
-            ? i + 1
-            : pages.length - i;
+        page.style.zIndex = i < paginaActual ? i + 1 : pages.length - i;
     });
 }
 
@@ -54,6 +53,7 @@ function volverPagina(pageToBack, pageIndex) {
     if (modoTraduccion) desactivarTraduccionGlobal();
     pageToBack.classList.remove('flipped');
     pageToBack.style.zIndex = pages.length - pageIndex;
+    paginaActual = pageIndex;
 
     const currentSong = pageToBack.getAttribute('data-song');
     if (currentSong) playMusic(currentSong);
@@ -62,43 +62,67 @@ function volverPagina(pageToBack, pageIndex) {
 function avanzarPagina() {
     if (paginaActual >= pages.length) return;
 
+    if (modoTraduccion) desactivarTraduccionGlobal();
+
     const page = pages[paginaActual];
 
-    if (modoTraduccion) desactivarTraduccionGlobal();
-    page.classList.add('flipped');
+    // Mantener la página visible mientras gira
+    page.style.zIndex = pages.length + 10;
+
+    requestAnimationFrame(() => {
+        page.classList.add('flipped');
+    });
+
     paginaActual++;
-    actualizarZIndex();
 
     const nextSong = pages[paginaActual]?.getAttribute('data-song');
     if (nextSong) playMusic(nextSong);
+
+    setTimeout(actualizarZIndex, 1150);
 }
 
 function retrocederPagina() {
     if (paginaActual <= 0) return;
 
+    if (modoTraduccion) desactivarTraduccionGlobal();
+
     paginaActual--;
+
     const page = pages[paginaActual];
 
-    if (modoTraduccion) desactivarTraduccionGlobal();
-    page.classList.remove('flipped');
-    actualizarZIndex();
+    // Mantener la página visible mientras regresa
+    page.style.zIndex = pages.length + 10;
+
+    requestAnimationFrame(() => {
+        page.classList.remove('flipped');
+    });
 
     const currentSong = page.getAttribute('data-song');
     if (currentSong) playMusic(currentSong);
+
+    setTimeout(actualizarZIndex, 1150);
 }
 
-book.addEventListener('click', (e) => {
-    if (e.target.closest('#btn-translate')) return;
-
-    const rect = book.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-
-    if (x > rect.width / 2) {
-        avanzarPagina();
-    } else {
-        retrocederPagina();
-    }
+// Evita que las páginas capturen el clic y bloqueen la navegación
+pages.forEach((page, index) => {
+    page.style.pointerEvents = 'none';
+    page.style.zIndex = pages.length - index;
 });
+
+if (bookContainer) {
+    bookContainer.addEventListener('click', (e) => {
+        if (e.target.closest('#btn-translate')) return;
+
+        const rect = bookContainer.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+
+        if (x > rect.width / 2) {
+            avanzarPagina();
+        } else {
+            retrocederPagina();
+        }
+    });
+}
 
 actualizarZIndex();
 
@@ -116,15 +140,9 @@ btnTranslate.addEventListener('click', async (e) => {
     const frontDiv = pageActiva.querySelector('.front');
 
     if (!modoTraduccion) {
-        // LÓGICA DINÁMICA: 
-        // 1. Tomamos el nombre base del array original (ej: 'jennie(4).png')
         let originalName = originalImages[indexPage];
-        
-        // 2. Quitamos paréntesis y números para coincidir con tus archivos de traducción
-        // 'jennie(4).png' -> 'jennie_traduccion.png'
         let tradName = originalName.replace(/\(\d+\)/, "").replace(".png", "_traduccion.png");
 
-        // 3. Casos especiales de mayúsculas (Jennie y Lisa)
         if (tradName.includes("jennie")) tradName = tradName.replace("jennie", "Jennie");
         if (tradName.includes("lisa")) tradName = tradName.replace("lisa", "Lisa");
 
@@ -136,9 +154,8 @@ btnTranslate.addEventListener('click', async (e) => {
 
             await preloadImage(tradSrc);
 
-            // Aplicamos la ruta de la carpeta /traduccion
             frontDiv.style.backgroundImage = `url('${tradSrc}')`;
-            
+
             btnTranslate.querySelector('.text').innerText = "Ver Original";
             btnTranslate.style.background = "#ff4fd8";
             btnTranslate.style.color = "#000";
@@ -159,7 +176,7 @@ function desactivarTraduccionGlobal() {
     btnTranslate.querySelector('.text').innerText = "Traducir página";
     btnTranslate.style.background = "rgba(0, 0, 0, 0.8)";
     btnTranslate.style.color = "#ff4fd8";
-    
+
     pages.forEach((p, i) => {
         const front = p.querySelector('.front');
         if (front.style.backgroundImage.includes('traduccion/')) {
