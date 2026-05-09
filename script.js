@@ -13,14 +13,14 @@ let pulseTime = 0;
 let energiaSuave = 0;
 let audioContext, analyser, dataArray;
 
-// --- CONFIGURACIÓN DE NITIDEZ (Anti-borroso) ---
+// --- CONFIGURACIÓN DE NITIDEZ ---
 function resize() {
     const dpr = window.devicePixelRatio || 1;
     canvas.width = window.innerWidth * dpr;
     canvas.height = window.innerHeight * dpr;
     ctx.scale(dpr, dpr);
-    canvas.style.width = `${window.innerWidth}px`;
-    canvas.style.height = `${window.innerHeight}px`;
+    canvas.style.width = '100%';
+    canvas.style.height = '100%';
 }
 window.addEventListener('resize', resize);
 resize();
@@ -30,18 +30,20 @@ class Particle {
         this.init();
     }
     init() {
-        // Posición aleatoria inicial
         this.x = Math.random() * window.innerWidth;
         this.y = Math.random() * window.innerHeight;
         
-        // Velocidad reducida (basada en tu original ~1.2)
-        this.vx = (Math.random() - 0.5) * 1.1; 
-        this.vy = (Math.random() - 0.5) * 1.1;
+        // Velocidad original: estable y pausada
+        this.vx = (Math.random() - 0.5) * 1.0; 
+        this.vy = (Math.random() - 0.5) * 1.0;
         
-        this.size = Math.random() * 1.5 + 1;
+        // Tamaño base y lógica de parpadeo/crecimiento
+        this.baseSize = Math.random() * 1.5 + 0.5;
+        this.size = this.baseSize;
+        this.growing = Math.random() > 0.5;
+        
         this.type = Math.floor(Math.random() * 3);
 
-        // Tus colores originales
         const r = Math.random();
         if (r < 0.55) this.color = '#ff4fd8';
         else if (r < 0.8) this.color = '#ffffff';
@@ -59,29 +61,44 @@ class Particle {
             this.x += (tx - this.x) * 0.04;
             this.y += (ty - this.y) * 0.04;
         } else {
-            let speedMult = 1 + (energiaSuave / 30); // Reacción más sutil al audio
+            // 1. Variación aleatoria de tamaño (como en tu original)
+            if (this.growing) {
+                this.size += 0.01;
+                if (this.size > this.baseSize + 1) this.growing = false;
+            } else {
+                this.size -= 0.01;
+                if (this.size < this.baseSize) this.growing = true;
+            }
+
+            // 2. Reacción al Audio: Velocidad y Tamaño (Valores rescatados de tu script)
+            let speedMult = 1 + (energiaSuave / 15); 
+            let audioSizeMult = 1 + (energiaSuave / 20); 
+
             this.x += this.vx * speedMult;
             this.y += this.vy * speedMult;
 
-            // --- LÓGICA DE DESAPARECER Y CREAR (OUT) ---
-            // En lugar de rebotar, reaparecen en el lado opuesto
+            // 3. Comportamiento "Out" (reaparecer)
             if (this.x < -10) this.x = window.innerWidth + 10;
             if (this.x > window.innerWidth + 10) this.x = -10;
             if (this.y < -10) this.y = window.innerHeight + 10;
             if (this.y > window.innerHeight + 10) this.y = -10;
+
+            this.currentRenderSize = this.size * audioSizeMult;
         }
     }
 
     draw() {
         ctx.fillStyle = this.color;
-        ctx.globalAlpha = 0.8; // Para un toque más suave
+        ctx.globalAlpha = 0.7; 
+        const renderSize = isHeartMode ? this.size * 1.5 : this.currentRenderSize;
+
         if (this.type === 1) {
-            this.drawStar(this.x, this.y, 5, this.size * 2, this.size);
+            this.drawStar(this.x, this.y, 5, renderSize * 2, renderSize);
         } else if (this.type === 2) {
-            this.drawHeart(this.x, this.y, this.size * 1.5);
+            this.drawHeart(this.x, this.y, renderSize * 1.5);
         } else {
             ctx.beginPath();
-            ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+            ctx.arc(this.x, this.y, renderSize, 0, Math.PI * 2);
             ctx.fill();
         }
         ctx.globalAlpha = 1.0;
@@ -109,11 +126,9 @@ class Particle {
     }
 }
 
-// Inicialización de 50 partículas (tu valor original)
 for (let i = 0; i < 50; i++) particles.push(new Particle());
 
 function render() {
-    // Limpiamos con el ancho real de la ventana
     ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
 
     if (analyser) {
@@ -124,7 +139,6 @@ function render() {
     }
 
     if (!isHeartMode) {
-        // LÍNEAS DE CONEXIÓN ORIGINALES
         ctx.strokeStyle = "rgba(255, 79, 216, 0.12)";
         ctx.lineWidth = 0.8;
         for (let i = 0; i < particles.length; i++) {
@@ -132,7 +146,7 @@ function render() {
                 let dx = particles[i].x - particles[j].x;
                 let dy = particles[i].y - particles[j].y;
                 let dist = Math.sqrt(dx * dx + dy * dy);
-                if (dist < 100) {
+                if (dist < 110) {
                     ctx.beginPath(); ctx.moveTo(particles[i].x, particles[i].y);
                     ctx.lineTo(particles[j].x, particles[j].y); ctx.stroke();
                 }
@@ -148,14 +162,7 @@ function render() {
 }
 render();
 
-// --- LÓGICA DE NAVEGACIÓN Y TRADUCCIÓN (MANTENIDA) ---
-function actualizarZIndex() {
-    pages.forEach((page, i) => {
-        if (i < paginaActual) page.style.zIndex = i + 1;
-        else page.style.zIndex = pages.length - i;
-    });
-}
-
+// Navegación (Izquierda: Atrás / Derecha: Adelante)
 function cambiarPagina(dir) {
     if (dir === 'adelante' && paginaActual < pages.length) {
         if (!audioContext) {
@@ -186,11 +193,10 @@ function cambiarPagina(dir) {
 function activarFinal() {
     bookContainer.style.opacity = "0";
     setTimeout(() => {
-        bookContainer.classList.add('hidden');
-        btnTranslate.classList.add('hidden');
+        bookContainer.style.display = 'none';
+        btnTranslate.style.display = 'none';
         isHeartMode = true;
-        // Llenar el corazón
-        for (let i = 0; i < 100; i++) particles.push(new Particle());
+        for (let i = 0; i < 120; i++) particles.push(new Particle());
         particles.forEach((p, i) => {
             let t = (i / particles.length) * Math.PI * 2;
             let x = 16 * Math.pow(Math.sin(t), 3);
@@ -200,6 +206,13 @@ function activarFinal() {
         document.getElementById('final-message-container').classList.remove('hidden');
         setTimeout(() => document.getElementById('final-message-container').classList.add('show'), 500);
     }, 1500);
+}
+
+function actualizarZIndex() {
+    pages.forEach((page, i) => {
+        if (i < paginaActual) page.style.zIndex = i + 1;
+        else page.style.zIndex = pages.length - i;
+    });
 }
 
 bookContainer.addEventListener('click', (e) => {
