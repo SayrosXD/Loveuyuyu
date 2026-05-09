@@ -1,177 +1,88 @@
-const canvas = document.getElementById('particle-canvas');
-const ctx = canvas.getContext('2d');
 const pages = [...document.querySelectorAll('.page')];
 const bookContainer = document.querySelector('.book-container');
 const audio = document.getElementById('bg-music');
 const btnTranslate = document.getElementById('btn-translate');
 
 let paginaActual = 0;
-let particles = [];
+let modoTraduccion = false;
+let audioContext = null;
+let analyser = null;
+let dataArray = null;
+let energiaSuave = 0;
+
+// Variables para el sistema de partículas del final (Canvas)
+let particlesFinal = [];
 let isHeartMode = false;
 let pulseFactor = 1;
 let pulseTime = 0;
-let energiaSuave = 0;
-let audioContext, analyser, dataArray;
 
-let modoTraduccion = false;
 const originalImages = [
     'inicio.png', 'teamo(1).png', 'carta(2).png', 'lisa(3).png',
     'jennie(4).png', 'jisoo(5).png', 'rose(6).png', 'final(7).png'
 ];
 
-function resize() {
-    const dpr = window.devicePixelRatio || 1;
-    canvas.width = window.innerWidth * dpr;
-    canvas.height = window.innerHeight * dpr;
-    ctx.scale(dpr, dpr);
-    canvas.style.width = '100%';
-    canvas.style.height = '100%';
-}
-window.addEventListener('resize', resize);
-resize();
-
-class Particle {
-    constructor() {
-        this.init();
-    }
-    init() {
-        this.x = Math.random() * window.innerWidth;
-        this.y = Math.random() * window.innerHeight;
-        this.vx = (Math.random() - 0.5) * 0.7; 
-        this.vy = (Math.random() - 0.5) * 0.7;
-        
-        // Tamaño base más pequeño para elegancia
-        this.baseSize = Math.random() * 1.1 + 0.6;
-        this.size = this.baseSize;
-        
-        // --- NUEVO: Ritmo aleatorio individual ---
-        this.sizeSpeed = Math.random() * 0.015 + 0.005; 
-        this.angle = Math.random() * Math.PI * 2; 
-        
-        this.type = Math.floor(Math.random() * 3);
-
-        const r = Math.random();
-        if (r < 0.55) this.color = '#ff4fd8';
-        else if (r < 0.8) this.color = '#ffffff';
-        else if (r < 0.92) this.color = '#b86bff';
-        else this.color = '#7a2cff';
-
-        this.targetX = null;
-        this.targetY = null;
-    }
-
-    update() {
-        if (isHeartMode && this.targetX !== null) {
-            let tx = this.targetX * pulseFactor + window.innerWidth / 2;
-            let ty = this.targetY * pulseFactor + window.innerHeight / 2;
-            this.x += (tx - this.x) * 0.04;
-            this.y += (ty - this.y) * 0.04;
-        } else {
-            // 1. Latido aleatorio independiente (Respiración)
-            this.angle += this.sizeSpeed;
-            // Oscila entre el tamaño base y un pequeño extra
-            let oscilacionSutil = Math.sin(this.angle) * 0.4;
-            
-            // 2. Impulso sutil de música (Solo si hay audio)
-            let impulsoAudio = (energiaSuave / 70); 
-
-            this.size = this.baseSize + oscilacionSutil + impulsoAudio;
-
-            this.x += this.vx * (1 + energiaSuave / 50);
-            this.y += this.vy * (1 + energiaSuave / 50);
-
-            if (this.x < -10) this.x = window.innerWidth + 10;
-            if (this.x > window.innerWidth + 10) this.x = -10;
-            if (this.y < -10) this.y = window.innerHeight + 10;
-            if (this.y > window.innerHeight + 10) this.y = -10;
-        }
-    }
-
-    draw() {
-        ctx.fillStyle = this.color;
-        ctx.globalAlpha = isHeartMode ? 0.8 : 0.65;
-        
-        if (this.type === 1) {
-            this.drawStar(this.x, this.y, 5, this.size * 2, this.size);
-        } else if (this.type === 2) {
-            this.drawHeart(this.x, this.y, this.size * 1.5);
-        } else {
-            ctx.beginPath();
-            ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-            ctx.fill();
-        }
-        ctx.globalAlpha = 1.0;
-    }
-
-    drawStar(cx, cy, spikes, outerRadius, innerRadius) {
-        let rot = Math.PI / 2 * 3; let step = Math.PI / spikes;
-        ctx.beginPath(); ctx.moveTo(cx, cy - outerRadius);
-        for (let i = 0; i < spikes; i++) {
-            ctx.lineTo(cx + Math.cos(rot) * outerRadius, cy + Math.sin(rot) * outerRadius);
-            rot += step;
-            ctx.lineTo(cx + Math.cos(rot) * innerRadius, cy + Math.sin(rot) * innerRadius);
-            rot += step;
-        }
-        ctx.closePath(); ctx.fill();
-    }
-
-    drawHeart(x, y, size) {
-        ctx.beginPath(); ctx.moveTo(x, y);
-        ctx.bezierCurveTo(x, y - size, x - size, y - size, x - size, y);
-        ctx.bezierCurveTo(x - size, y + size, x, y + size, x, y + size * 1.5);
-        ctx.bezierCurveTo(x, y + size, x + size, y + size, x + size, y);
-        ctx.bezierCurveTo(x + size, y - size, x, y - size, x, y);
-        ctx.fill();
-    }
-}
-
-for (let i = 0; i < 55; i++) particles.push(new Particle());
-
-function render() {
-    ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
-
-    if (analyser) {
-        analyser.getByteFrequencyData(dataArray);
-        let sum = 0;
-        for (let i = 0; i < 4; i++) sum += dataArray[i];
-        energiaSuave = energiaSuave * 0.85 + (sum / 4) * 0.15;
-    }
-
-    if (!isHeartMode) {
-        ctx.strokeStyle = "rgba(255, 79, 216, 0.08)";
-        ctx.lineWidth = 0.5;
-        for (let i = 0; i < particles.length; i++) {
-            for (let j = i + 1; j < particles.length; j++) {
-                let dx = particles[i].x - particles[j].x;
-                let dy = particles[i].y - particles[j].y;
-                let dist = Math.sqrt(dx * dx + dy * dy);
-                if (dist < 100) {
-                    ctx.beginPath(); ctx.moveTo(particles[i].x, particles[i].y);
-                    ctx.lineTo(particles[j].x, particles[j].y); ctx.stroke();
-                }
+// --- 1. INICIALIZAR PARTICULAS ORIGINALES (Valores de tu script original) ---
+function initParticles() {
+    particlesJS("particles-js", {
+        "particles": {
+            "number": { "value": 50, "density": { "enable": true, "value_area": 800 } },
+            "color": { "value": "#ff4fd8" },
+            "shape": { "type": "circle" },
+            "opacity": { "value": 0.5, "random": true },
+            "size": { "value": 3, "random": true },
+            "line_linked": {
+                "enable": true,
+                "distance": 150,
+                "color": "#ff4fd8",
+                "opacity": 0.4,
+                "width": 1
+            },
+            "move": {
+                "enable": true,
+                "speed": 1.2, // Tu velocidad original
+                "direction": "none",
+                "random": true,
+                "straight": false,
+                "out_mode": "out", // Comportamiento que pediste: desaparecen y aparecen
+                "bounce": false
             }
-        }
-    } else {
-        pulseTime += 0.04;
-        pulseFactor = 1 + Math.sin(pulseTime) * 0.08;
-    }
-
-    particles.forEach(p => { p.update(); p.draw(); });
-    requestAnimationFrame(render);
+        },
+        "interactivity": {
+            "detect_on": "canvas",
+            "events": { "onhover": { "enable": false } },
+            "modes": { "push": { "particles_nb": 4 } }
+        },
+        "retina_detect": true
+    });
 }
-render();
+initParticles();
 
-// --- LÓGICA DE TRADUCCIÓN REPARADA ---
+// --- 2. LÓGICA DE AUDIO (Tu comportamiento original) ---
+function actualizarParticulasConAudio() {
+    requestAnimationFrame(actualizarParticulasConAudio);
+    if (!analyser || !dataArray || isHeartMode) return;
+
+    analyser.getByteFrequencyData(dataArray);
+    let sumaBajos = 0;
+    for (let i = 0; i < 4; i++) sumaBajos += dataArray[i];
+    energiaSuave = energiaSuave * 0.85 + (sumaBajos / 4) * 0.15;
+
+    const pJS = window.pJSDom && window.pJSDom[0] && window.pJSDom[0].pJS;
+    if (pJS && pJS.particles) {
+        // Valores exactos de tu script (2).js
+        pJS.particles.move.speed = 1.2 + (energiaSuave / 15);
+        pJS.particles.size.value = 3 + (energiaSuave / 20);
+    }
+}
+
+// --- 3. TRADUCCIÓN ---
 btnTranslate.addEventListener('click', () => {
-    // Buscamos la página que está visible actualmente (sin la clase flipped)
-    // O si estamos navegando, la página que corresponde al índice actual
     const currentIdx = Math.min(paginaActual, originalImages.length - 1);
     const frontSide = pages[currentIdx].querySelector('.front');
     
     if (!modoTraduccion) {
         let originalName = originalImages[currentIdx];
         let tradName = originalName.replace(".png", "_traduccion.png").replace(/\(\d+\)/, "");
-        
         frontSide.style.backgroundImage = `url('assets/images/traduccion/${tradName}')`;
         btnTranslate.querySelector('.text').innerText = "Ver Original";
         modoTraduccion = true;
@@ -182,8 +93,8 @@ btnTranslate.addEventListener('click', () => {
     }
 });
 
+// --- 4. NAVEGACIÓN ---
 function cambiarPagina(dir) {
-    // Resetear visualmente el botón al cambiar página
     modoTraduccion = false;
     btnTranslate.querySelector('.text').innerText = "Traducir página";
 
@@ -195,6 +106,7 @@ function cambiarPagina(dir) {
             analyser.fftSize = 64;
             dataArray = new Uint8Array(analyser.frequencyBinCount);
             source.connect(analyser); analyser.connect(audioContext.destination);
+            actualizarParticulasConAudio();
         }
         pages[paginaActual].classList.add('flipped');
         paginaActual++;
@@ -213,24 +125,6 @@ function cambiarPagina(dir) {
     }
 }
 
-function activarFinal() {
-    bookContainer.style.opacity = "0";
-    setTimeout(() => {
-        bookContainer.style.display = 'none';
-        btnTranslate.style.display = 'none';
-        isHeartMode = true;
-        for (let i = 0; i < 100; i++) particles.push(new Particle());
-        particles.forEach((p, i) => {
-            let t = (i / particles.length) * Math.PI * 2;
-            let x = 16 * Math.pow(Math.sin(t), 3);
-            let y = -(13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t));
-            p.targetX = x * 13; p.targetY = y * 13;
-        });
-        document.getElementById('final-message-container').classList.remove('hidden');
-        setTimeout(() => document.getElementById('final-message-container').classList.add('show'), 500);
-    }, 1500);
-}
-
 function actualizarZIndex() {
     pages.forEach((page, i) => {
         if (i < paginaActual) page.style.zIndex = i + 1;
@@ -238,10 +132,81 @@ function actualizarZIndex() {
     });
 }
 
+// --- 5. COMPORTAMIENTO ESPECIAL AL FINAL (Corazón) ---
+function activarFinal() {
+    bookContainer.style.opacity = "0";
+    setTimeout(() => {
+        bookContainer.style.display = 'none';
+        btnTranslate.style.display = 'none';
+        
+        // Detenemos particles.js y mostramos el Canvas del corazón
+        isHeartMode = true;
+        const pjsCanvas = document.querySelector('#particles-js canvas');
+        if (pjsCanvas) pjsCanvas.style.display = 'none';
+        
+        iniciarCorazonFinal();
+        document.getElementById('final-message-container').classList.remove('hidden');
+        setTimeout(() => document.getElementById('final-message-container').classList.add('show'), 500);
+    }, 1500);
+}
+
+// Lógica de dibujo manual solo para el final
+function iniciarCorazonFinal() {
+    const canvas = document.createElement('canvas');
+    canvas.id = 'final-heart-canvas';
+    document.body.appendChild(canvas);
+    const ctx = canvas.getContext('2d');
+    
+    function resize() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    class ParticleFinal {
+        constructor(tx, ty) {
+            this.x = Math.random() * canvas.width;
+            this.y = Math.random() * canvas.height;
+            this.tx = tx; this.ty = ty;
+            this.size = Math.random() * 2 + 1;
+            this.color = "#ff4fd8";
+        }
+        update() {
+            let realTx = this.tx * pulseFactor + canvas.width / 2;
+            let realTy = this.ty * pulseFactor + canvas.height / 2;
+            this.x += (realTx - this.x) * 0.05;
+            this.y += (realTy - this.y) * 0.05;
+        }
+        draw() {
+            ctx.fillStyle = this.color;
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+            ctx.fill();
+        }
+    }
+
+    // Crear forma de corazón
+    for (let i = 0; i < 150; i++) {
+        let t = (i / 150) * Math.PI * 2;
+        let x = 16 * Math.pow(Math.sin(t), 3);
+        let y = -(13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t));
+        particlesFinal.push(new ParticleFinal(x * 12, y * 12));
+    }
+
+    function renderFinal() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        pulseTime += 0.05;
+        pulseFactor = 1 + Math.sin(pulseTime) * 0.1;
+        particlesFinal.forEach(p => { p.update(); p.draw(); });
+        requestAnimationFrame(renderFinal);
+    }
+    renderFinal();
+}
+
 bookContainer.addEventListener('click', (e) => {
     const rect = bookContainer.getBoundingClientRect();
-    const clickX = e.clientX - rect.left;
-    if (clickX > rect.width / 2) cambiarPagina('adelante');
+    if ((e.clientX - rect.left) > rect.width / 2) cambiarPagina('adelante');
     else cambiarPagina('atras');
 });
 
