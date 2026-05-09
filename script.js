@@ -9,7 +9,7 @@ pages.forEach((page, index) => {
     page.style.zIndex = pages.length - index;
 
     page.addEventListener('click', (e) => {
-        // No pasar página si se hace clic en el botón de traducir
+        // SEGURIDAD: Si el clic viene del botón o sus hijos, ignorar navegación del libro
         if (e.target.closest('#btn-translate')) return;
 
         const rect = page.getBoundingClientRect();
@@ -18,7 +18,7 @@ pages.forEach((page, index) => {
 
         // Avanzar (Derecha)
         if (x > width * 0.7 && !page.classList.contains('flipped')) {
-            desactivarTraduccionGlobal(); // Resetear traducción al cambiar
+            desactivarTraduccionGlobal(); 
             page.classList.add('flipped');
             setTimeout(() => { page.style.zIndex = index + 1; }, 600);
             
@@ -44,29 +44,38 @@ function playMusic(source) {
     audio.play().catch(() => console.log("Interacción requerida"));
 }
 
-// --- 2. SISTEMA DE TRADUCCIÓN POR REEMPLAZO ---
-btnTranslate.addEventListener('click', () => {
-    // Encontrar la página que está actualmente al frente
+// --- 2. SISTEMA DE TRADUCCIÓN POR REEMPLAZO (CARPETA /TRADUCCION) ---
+btnTranslate.addEventListener('click', (e) => {
+    // EVITA que el clic se propague a la página y la voltee
+    e.stopPropagation();
+
     const pageActiva = Array.from(pages).find(p => !p.classList.contains('flipped'));
     if (!pageActiva) return;
 
     const frontDiv = pageActiva.querySelector('.front');
     
     if (!modoTraduccion) {
-        // 1. Obtener la ruta actual y extraer solo el nombre del archivo
+        // 1. Obtener el nombre del archivo actual (ej: 'assets/images/inicio.png')
         let currentBg = window.getComputedStyle(frontDiv).backgroundImage;
-        let fullPath = currentBg.slice(5, -2).replace(/"/g, "");
-        let fileName = fullPath.split('/').pop();
-
-        // 2. Limpiar el nombre (quitar paréntesis) y añadir el sufijo
-        let cleanName = fileName.replace(/\(\d+\)/, "").replace(".png", "_traduccion.png");
+        // Limpiamos la cadena para obtener solo el nombre del archivo
+        let fileName = currentBg.split('/').pop().replace(/[()"\s]/g, '').replace('url', '');
         
-        // Ajuste manual de mayúsculas para coincidir con tus archivos en la raíz
-        if (cleanName.includes("jennie")) cleanName = cleanName.replace("jennie", "Jennie");
-        if (cleanName.includes("lisa")) cleanName = cleanName.replace("lisa", "Lisa");
+        // 2. Mapeo lógico según tus archivos en la carpeta /traduccion
+        let cleanName = "";
+        if (fileName.includes("inicio")) cleanName = "inicio_traduccion.png";
+        else if (fileName.includes("teamo")) cleanName = "teamo_traduccion.png";
+        else if (fileName.includes("lisa")) cleanName = "Lisa_traduccion.png"; // Mayúscula según tu lista
+        else if (fileName.includes("jennie")) cleanName = "Jennie_traduccion.png"; // Mayúscula según tu lista
+        else if (fileName.includes("jisoo")) cleanName = "jisoo_traduccion.png";
+        else if (fileName.includes("rose")) cleanName = "rose_traduccion.png";
+        else if (fileName.includes("final")) cleanName = "final_traduccion.png";
+        else {
+            // Si es la carta u otra página sin traducción, no hace nada
+            return;
+        }
 
-        // 3. Aplicar la nueva imagen desde la RAÍZ
-        frontDiv.style.backgroundImage = `url('${cleanName}')`;
+        // 3. Aplicar ruta apuntando a la carpeta /traduccion
+        frontDiv.style.backgroundImage = `url('traduccion/${cleanName}')`;
         
         btnTranslate.classList.add('active');
         btnTranslate.querySelector('.text').innerText = "Ver Original";
@@ -76,7 +85,7 @@ btnTranslate.addEventListener('click', () => {
     }
 });
 
-// Restaurar imágenes originales a su carpeta assets/images/
+// Función para restaurar las imágenes originales desde assets/images/
 function resetImages() {
     const originalImages = [
         'inicio.png', 'teamo(1).png', 'carta(2).png', 'lisa(3).png', 
