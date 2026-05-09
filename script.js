@@ -1,68 +1,109 @@
-// --- LÓGICA DEL TRADUCTOR BLACKPINK ---
+const pages = document.querySelectorAll('.page');
+const audio = document.getElementById('bg-music');
+const btnTranslate = document.getElementById('btn-translate');
+let modoTraduccion = false;
 
-document.getElementById('btn-translate').addEventListener('click', async function() {
-    // 1. Identificar la página que está al frente (la que no tiene la clase flipped)
-    const allPages = Array.from(document.querySelectorAll('.page'));
-    const activePageElement = allPages.find(p => !p.classList.contains('flipped'));
+// Array con los nombres originales exactos para la restauración
+const originalImages = [
+    'inicio.png', 'teamo(1).png', 'carta(2).png', 'lisa(3).png', 
+    'jennie(4).png', 'jisoo(5).png', 'rose(6).png', 'final(7).png'
+];
 
-    if (!activePageElement) return;
+// --- 1. NAVEGACIÓN Y AUDIO ---
+pages.forEach((page, index) => {
+    page.style.zIndex = pages.length - index;
 
-    // Obtener la URL de la imagen del 'front' de esa página
-    const frontDiv = activePageElement.querySelector('.front');
-    const style = window.getComputedStyle(frontDiv);
-    const bgUrl = style.backgroundImage.slice(5, -2).replace(/"/g, "");
+    page.addEventListener('click', (e) => {
+        if (e.target.closest('#btn-translate')) return;
 
-    if (!bgUrl || bgUrl === "one") {
-        Swal.fire({
-            title: 'Ups!',
-            text: 'No hay texto detectable en esta página.',
-            icon: 'info',
-            confirmButtonColor: '#ff4fd8'
-        });
-        return;
-    }
+        const rect = page.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const width = rect.width;
 
-    // 2. Mostrar estado de carga
-    Swal.fire({
-        title: 'Analizando imagen...',
-        html: 'Buscando texto en la página',
-        allowOutsideClick: false,
-        didOpen: () => { Swal.showLoading(); },
-        customClass: { popup: 'bp-swal-popup', title: 'bp-swal-title' }
-    });
-
-    try {
-        // 3. Tesseract OCR (Reconoce inglés y coreano por defecto)
-        const worker = await Tesseract.createWorker('eng+kor');
-        const { data: { text } } = await worker.recognize(bgUrl);
-        await worker.terminate();
-
-        if (!text.trim()) {
-            throw new Error("No se encontró texto");
+        if (x > width * 0.7 && !page.classList.contains('flipped')) {
+            if (modoTraduccion) desactivarTraduccionGlobal();
+            page.classList.add('flipped');
+            setTimeout(() => { page.style.zIndex = index + 1; }, 600);
+            const nextSong = pages[index + 1]?.getAttribute('data-song');
+            if (nextSong) playMusic(nextSong);
+        } 
+        else if (x < width * 0.3 && page.classList.contains('flipped')) {
+            if (modoTraduccion) desactivarTraduccionGlobal();
+            page.classList.remove('flipped');
+            page.style.zIndex = pages.length - index;
+            const currentSong = page.getAttribute('data-song');
+            if (currentSong) playMusic(currentSong);
         }
+    });
+});
 
-        // 4. Traducir usando la API de Google (Gratuita para este uso)
-        const response = await fetch(`https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=es&dt=t&q=${encodeURIComponent(text)}`);
-        const result = await response.json();
-        const translatedText = result[0].map(item => item[0]).join("");
+function playMusic(source) {
+    if (!source || audio.src.includes(source)) return;
+    audio.src = source;
+    audio.loop = true;
+    audio.play().catch(() => console.log("Audio en espera"));
+}
 
-        // 5. Mostrar resultado final
-        Swal.fire({
-            title: 'Traducción',
-            text: translatedText,
-            confirmButtonText: 'Entendido',
-            confirmButtonColor: '#ff4fd8',
-            customClass: { popup: 'bp-swal-popup', title: 'bp-swal-title' }
-        });
+// --- 2. SISTEMA DE TRADUCCIÓN DINÁMICO ---
+btnTranslate.addEventListener('click', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
 
-    } catch (error) {
-        console.error(error);
-        Swal.fire({
-            title: 'Error',
-            text: 'No pudimos leer el texto. Asegúrate de que la imagen sea clara.',
-            icon: 'error',
-            confirmButtonColor: '#ff4fd8',
-            customClass: { popup: 'bp-swal-popup', title: 'bp-swal-title' }
-        });
+    const pageActiva = Array.from(pages).find(p => !p.classList.contains('flipped'));
+    if (!pageActiva) return;
+
+    const indexPage = Array.from(pages).indexOf(pageActiva);
+    const frontDiv = pageActiva.querySelector('.front');
+
+    if (!modoTraduccion) {
+        // LÓGICA DINÁMICA: 
+        // 1. Tomamos el nombre base del array original (ej: 'jennie(4).png')
+        let originalName = originalImages[indexPage];
+        
+        // 2. Quitamos paréntesis y números para coincidir con tus archivos de traducción
+        // 'jennie(4).png' -> 'jennie_traduccion.png'
+        let tradName = originalName.replace(/\(\d+\)/, "").replace(".png", "_traduccion.png");
+
+        // 3. Casos especiales de mayúsculas (Jennie y Lisa)
+        if (tradName.includes("jennie")) tradName = tradName.replace("jennie", "Jennie");
+        if (tradName.includes("lisa")) tradName = tradName.replace("lisa", "Lisa");
+
+        // Aplicamos la ruta de la carpeta /traduccion
+        frontDiv.style.backgroundImage = `url('traduccion/${tradName}')`;
+        
+        btnTranslate.querySelector('.text').innerText = "Ver Original";
+        btnTranslate.style.background = "#ff4fd8";
+        btnTranslate.style.color = "#000";
+        modoTraduccion = true;
+    } else {
+        desactivarTraduccionGlobal();
     }
 });
+
+function desactivarTraduccionGlobal() {
+    modoTraduccion = false;
+    btnTranslate.querySelector('.text').innerText = "Traducir página";
+    btnTranslate.style.background = "rgba(0, 0, 0, 0.8)";
+    btnTranslate.style.color = "#ff4fd8";
+    
+    pages.forEach((p, i) => {
+        const front = p.querySelector('.front');
+        if (front.style.backgroundImage.includes('traduccion/')) {
+            front.style.backgroundImage = `url('assets/images/${originalImages[i]}')`;
+        }
+    });
+}
+
+// --- 3. PARTICULAS ---
+if (typeof particlesJS !== 'undefined') {
+    particlesJS("particles-js", {
+        particles: {
+            number: { value: 50, density: { enable: true, value_area: 800 } },
+            color: { value: "#ff4fd8" },
+            shape: { type: "circle" },
+            opacity: { value: 0.3 },
+            size: { value: 2 },
+            move: { enable: true, speed: 1 }
+        }
+    });
+}
