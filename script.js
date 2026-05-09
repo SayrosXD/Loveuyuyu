@@ -96,6 +96,9 @@ function actualizarParticulasConAudio() {
     const pJS = window.pJSDom && window.pJSDom[0] && window.pJSDom[0].pJS;
     if (pJS && pJS.particles && pJS.particles.move) {
         pJS.particles.move.speed = speed;
+        pJS.particles.size.value = 2 + (energiaSuave / 45);
+        pJS.particles.line_linked.opacity = 0.1 + (energiaSuave / 500);
+        pJS.particles.opacity.value = 0.3 + (energiaSuave / 250);
     }
 }
 
@@ -268,16 +271,56 @@ function desactivarTraduccionGlobal() {
     });
 }
 
-// --- 3. PARTICULAS ---
+// --- 3. PARTICULAS VERSIÓN BLACKPINK LUXURY ---
 if (typeof particlesJS !== 'undefined') {
     particlesJS("particles-js", {
-        particles: {
-            number: { value: 50, density: { enable: true, value_area: 800 } },
-            color: { value: "#ff4fd8" },
-            shape: { type: "circle" },
-            opacity: { value: 0.3 },
-            size: { value: 2 },
-            move: { enable: true, speed: 1 }
-        }
+        "particles": {
+            "number": { "value": 100, "density": { "enable": true, "value_area": 800 } },
+            "color": {
+                "value": ["#ff4fd8", "#ffffff", "#a855f7", "#ffb7ff"]
+            },
+            "shape": {
+                "type": ["circle", "star", "heart"],
+                "stroke": { "width": 0, "color": "#000000" }
+            },
+            "opacity": {
+                "value": 0.6,
+                "random": true,
+                "anim": { "enable": true, "speed": 1, "opacity_min": 0.1, "sync": false }
+            },
+            "size": {
+                "value": 3,
+                "random": true,
+                "anim": { "enable": true, "speed": 2, "size_min": 0.5, "sync": false }
+            },
+            "line_linked": {
+                "enable": true,
+                "distance": 130,
+                "color": "#ff4fd8",
+                "opacity": 0.2,
+                "width": 1
+            },
+            "move": {
+                "enable": true,
+                "speed": 1.5,
+                "direction": "none",
+                "random": true,
+                "straight": false,
+                "out_mode": "out",
+                "bounce": false
+            }
+        },
+        "interactivity": {
+            "detect_on": "canvas",
+            "events": {
+                "onhover": { "enable": true, "mode": "bubble" },
+                "onclick": { "enable": true, "mode": "push" }
+            },
+            "modes": {
+                "bubble": { "distance": 200, "size": 6, "duration": 2, "opacity": 0.8, "speed": 3 },
+                "push": { "particles_nb": 4 }
+            }
+        },
+        "retina_detect": true
     });
 }
