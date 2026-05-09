@@ -482,7 +482,6 @@ function crearCorazonFinal() {
 
 // Iniciar al cargar
 window.onload = () => {
-    if (typeof particlesJS !== 'undefined') {
         initParticles();
     }
     actualizarZIndex();
