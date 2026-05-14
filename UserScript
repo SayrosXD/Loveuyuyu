@@ -1,0 +1,549 @@
+// ==UserScript==
+// @name         Quiz Automation Ultra + Gemini OPTIMIZED
+// @match        *://*/*
+// @grant        none
+// ==/UserScript==
+
+(function () {
+  'use strict';
+
+  const API_KEY = "AIzaSyBaVgNRIE_m2YCQF5zIsHQPzaeuj_OAKLk";
+
+  // =========================
+  // UTILIDADES
+  // =========================
+
+  function showToast(msg) {
+    const toast = document.createElement('div');
+
+    toast.textContent = msg;
+
+    toast.style.cssText = `
+      position:fixed;
+      top:20px;
+      right:20px;
+      z-index:999999;
+      background:#222;
+      color:white;
+      padding:12px 18px;
+      border-radius:12px;
+      font-size:14px;
+      box-shadow:0 4px 10px rgba(0,0,0,0.3);
+    `;
+
+    document.body.appendChild(toast);
+
+    setTimeout(() => {
+      toast.remove();
+    }, 2500);
+  }
+
+  function isVisible(el) {
+    if (!el) return false;
+
+    const style = window.getComputedStyle(el);
+    const rect = el.getBoundingClientRect();
+
+    return (
+      style.display !== 'none' &&
+      style.visibility !== 'hidden' &&
+      style.opacity !== '0' &&
+      rect.width > 0 &&
+      rect.height > 0 &&
+      el.offsetParent !== null
+    );
+  }
+
+  // =========================
+  // DETECCIÓN TEXTO
+  // =========================
+
+  function getTargetText() {
+    const strongs = [...document.querySelectorAll('strong')];
+
+    for (const s of strongs) {
+      if (!isVisible(s)) continue;
+
+      const text = s.innerText?.trim();
+
+      if (text && text.length > 1) {
+        return text.replace(/["]/g, '');
+      }
+    }
+
+    return null;
+  }
+
+  // =========================
+  // EVENTOS Y AUTO INPUT
+  // =========================
+
+  function triggerEvents(el) {
+    el.dispatchEvent(new Event('input', { bubbles: true }));
+    el.dispatchEvent(new Event('change', { bubbles: true }));
+  }
+
+  function simulateEnter(el) {
+    el.dispatchEvent(new KeyboardEvent('keydown', {
+      key: 'Enter',
+      code: 'Enter',
+      which: 13,
+      keyCode: 13,
+      bubbles: true
+    }));
+  }
+
+  function fillBestElement(text, box) {
+
+  // =========================
+  // INPUTS VISIBLES REALES
+  // =========================
+
+  const textInputs = [
+    ...document.querySelectorAll(
+      'input[type="text"]:not([disabled]), textarea:not([disabled])'
+    )
+  ].filter(el =>
+    isVisible(el) &&
+    !el.readOnly
+  );
+
+  // SOLO usar input si realmente existe
+  if (textInputs.length > 0) {
+
+    const el = textInputs[0];
+
+    el.focus();
+
+    el.value = text;
+
+    triggerEvents(el);
+
+    simulateEnter(el);
+
+    if (box) {
+      box.value = `✅ Input enviado:\n${text}`;
+    }
+
+    return true;
+  }
+
+  // =========================
+  // CONTENTEDITABLE
+  // =========================
+
+  const editable = [
+    ...document.querySelectorAll('[contenteditable="true"]')
+  ].filter(isVisible);
+
+  if (editable.length > 0) {
+
+    const el = editable[0];
+
+    el.focus();
+
+    el.innerText = text;
+
+    triggerEvents(el);
+
+    simulateEnter(el);
+
+    if (box) {
+      box.value = `✅ Editable enviado:\n${text}`;
+    }
+
+    return true;
+  }
+
+  // =========================
+  // SELECTS
+  // =========================
+
+  const selects = [
+    ...document.querySelectorAll('select:not([disabled])')
+  ].filter(isVisible);
+
+  // NO HAY SELECTS
+  if (selects.length === 0) {
+    return false;
+  }
+
+  // =========================
+  // SOLO 1 SELECT
+  // =========================
+
+  if (selects.length === 1) {
+
+    const select = selects[0];
+
+    const options = [...select.options];
+
+    const lowerText = text.toLowerCase();
+
+    const words = lowerText.split(/\s+/);
+
+    for (const opt of options) {
+
+      const optText = opt.text
+        .trim()
+        .toLowerCase();
+
+      if (
+        !optText ||
+        optText.includes('select')
+      ) continue;
+
+      // exacto
+      if (optText === lowerText) {
+
+        select.value = opt.value;
+
+        triggerEvents(select);
+
+        if (box) {
+          box.value = `✅ Select exacto:\n${opt.text}`;
+        }
+
+        return true;
+      }
+
+      // parcial
+      if (
+        lowerText.includes(optText) ||
+        words.includes(optText)
+      ) {
+
+        select.value = opt.value;
+
+        triggerEvents(select);
+
+        if (box) {
+          box.value = `✅ Select detectado:\n${opt.text}`;
+        }
+
+        return true;
+      }
+    }
+  }
+
+  // =========================
+  // MULTI SELECT
+  // =========================
+
+  const words = text
+  .split(/\s+/)
+  .map(w =>
+    w
+      .trim()
+      .replace(/[.,!?]/g, '')
+  )
+  .filter(Boolean);
+
+  let count = 0;
+
+  selects.forEach((select, index) => {
+
+    const targetWord = words[index];
+
+    if (!targetWord) return;
+
+    const target = targetWord.toLowerCase();
+
+    for (const opt of select.options) {
+
+      const optText = opt.text
+        .trim()
+        .toLowerCase();
+
+      if (optText === target) {
+
+        select.value = opt.value;
+
+        triggerEvents(select);
+
+        count++;
+
+        break;
+      }
+    }
+  });
+
+  if (count > 0) {
+
+    if (box) {
+      box.value = `✅ Multi-select:\n${count} llenados`;
+    }
+
+    return true;
+  }
+
+  return false;
+}
+  // =========================
+  // GEMINI
+  // =========================
+
+
+
+      async function consultarIA() {
+
+  const box = document.getElementById('vm-output');
+
+  box.value = "🔍 Buscando pregunta...";
+
+  try {
+
+    // =========================
+    // TOMAR SOLO EL ÚLTIMO H2
+    // =========================
+
+    const h2s = [
+      ...document.querySelectorAll('h2')
+    ].filter(h2 => isVisible(h2));
+
+    const questionEl = h2s[h2s.length - 1];
+
+    if (!questionEl) {
+      box.value = "❌ No encontré pregunta";
+      return;
+    }
+
+    const question = questionEl.innerText
+      .replace(/\s+/g, ' ')
+      .trim();
+
+    // =========================
+    // SOLO LI CON CHECKBOX
+    // =========================
+
+    const options = [
+      ...document.querySelectorAll('li')
+    ]
+    .filter(li =>
+      li.querySelector('input[type="checkbox"]')
+      && isVisible(li)
+    )
+    .map(li => {
+
+      const input = li.querySelector('input');
+
+      const text = li.innerText
+        .replace(/\s+/g, ' ')
+        .trim();
+
+      return {
+        text,
+        input,
+        element: li
+      };
+    });
+
+    if (!options.length) {
+      box.value = "❌ No encontré opciones";
+      return;
+    }
+
+    // =========================
+    // PROMPT PEQUEÑO
+    // =========================
+
+    const promptIA = `
+Answer this English exercise.
+
+Question:
+${question}
+
+Options:
+${options.map(o => o.text).join('\n')}
+
+Reply ONLY with the correct option text.
+`;
+
+    console.log(promptIA);
+
+    box.value = "🤖 Consultando Gemini...";
+
+    // =========================
+    // GEMINI
+    // =========================
+
+    const response = await fetch(
+ `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${API_KEY}`,
+      {
+        method: "POST",
+
+        headers: {
+          "Content-Type": "application/json"
+        },
+
+        body: JSON.stringify({
+          contents: [
+            {
+              parts: [
+                {
+                  text: promptIA
+                }
+              ]
+            }
+          ]
+        })
+      }
+    );
+
+    const data = await response.json();
+
+    console.log(data);
+
+    if (data.error) {
+      box.value = `❌ ${data.error.message}`;
+      return;
+    }
+
+    const result =
+      data?.candidates?.[0]?.content?.parts?.[0]?.text;
+
+    if (!result) {
+      box.value = "❌ Gemini no respondió";
+      return;
+    }
+
+    const clean = result
+      .trim()
+      .replace(/["']/g, '')
+      .toLowerCase();
+
+    // =========================
+    // MATCH
+    // =========================
+
+    const match = options.find(opt =>
+      opt.text.toLowerCase() === clean
+      || clean.includes(opt.text.toLowerCase())
+    );
+
+    if (!match) {
+
+      box.value = `⚠️ No encontré coincidencia:\n${result}`;
+
+      showToast('⚠️ Sin coincidencia');
+
+      return;
+    }
+
+    // =========================
+    // CLICK
+    // =========================
+
+    match.input.click();
+
+    triggerEvents(match.input);
+
+    box.value = `✅ Respondido:\n${match.text}`;
+
+    showToast('✅ Respuesta enviada');
+
+  } catch (err) {
+
+    console.error(err);
+
+    box.value = `❌ ${err.message}`;
+
+    showToast('❌ Error');
+  }
+}
+
+  // =========================
+  // UI
+  // =========================
+
+  function ensurePanel() {
+
+    if (document.getElementById('vm-panel')) return;
+
+    const panel = document.createElement('div');
+
+    panel.id = 'vm-panel';
+
+    panel.style.cssText = `
+      position:fixed;
+      right:16px;
+      bottom:16px;
+      z-index:999999;
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+    `;
+
+    const box = document.createElement('textarea');
+
+    box.id = 'vm-output';
+
+    box.placeholder = 'Esperando...';
+
+    box.readOnly = true;
+
+    box.style.cssText = `
+      width:220px;
+      height:60px;
+      resize:none;
+      border-radius:10px;
+      border:1px solid #ccc;
+      padding:8px;
+      font-size:12px;
+      background:#f9f9f9;
+    `;
+
+    // BOTÓN IA
+    const btnIA = document.createElement('button');
+
+    btnIA.textContent = '🤖 Gemini';
+
+    btnIA.style.cssText = `
+      background:#6200ea;
+      color:white;
+      border:none;
+      border-radius:20px;
+      padding:12px;
+      cursor:pointer;
+      font-weight:bold;
+    `;
+
+    btnIA.onclick = consultarIA;
+
+    // BOTÓN TEXTO
+    const btn = document.createElement('button');
+
+    btn.textContent = '⚡ Auto-Quiz';
+
+    btn.style.cssText = `
+      background:#2e7d32;
+      color:white;
+      border:none;
+      border-radius:20px;
+      padding:12px;
+      cursor:pointer;
+      font-weight:bold;
+    `;
+
+    btn.onclick = () => {
+
+      const text = getTargetText();
+
+      if (!text) {
+        showToast('❌ No hay texto fuerte');
+        return;
+      }
+
+      fillBestElement(text, box);
+    };
+
+    panel.appendChild(box);
+    panel.appendChild(btnIA);
+    panel.appendChild(btn);
+
+    document.body.appendChild(panel);
+  }
+
+  setInterval(ensurePanel, 2000);
+
+})();
