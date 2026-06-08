@@ -6,7 +6,7 @@
     <title>El cielo tiene celos</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400&family=Playfair+Display:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400&family=Playfair+Display:ital,wght=0,400;0,500;1,400&display=swap" rel="stylesheet">
     
     <style>
         /* --- VARIABLES DE DISEÑO --- */
@@ -108,7 +108,7 @@
             transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
-        /* --- SOLUCIÓN AL BUG DE SUPERPOSICIÓN Y TEXTO OCULTO --- */
+        /* --- DISEÑO EDITORIAL Y TEXTOS --- */
         h1, h2, .climax-phrase {
             font-family: 'Playfair Display', serif;
             color: var(--gold-antique);
@@ -138,7 +138,6 @@
             z-index: 5;
         }
 
-        /* Nuevo sistema de revelado seguro sin overflow:hidden */
         .line-reveal {
             font-size: 1.25rem;
             line-height: 1.9;
@@ -149,7 +148,7 @@
             transform: translateY(15px);
             transition: all 1.5s cubic-bezier(0.16, 1, 0.3, 1);
             margin-bottom: 0.4rem;
-            padding-right: 15px; /* Evita cortes en fuentes cursivas/itálicas */
+            padding-right: 15px;
         }
 
         .act-active .line-reveal:nth-child(1) { transition-delay: 0.2s; opacity: 1; filter: blur(0); transform: translateY(0); }
@@ -168,14 +167,14 @@
             text-shadow: 0 0 10px var(--gold-glow);
         }
 
-        /* --- MAQUETACIÓN EQUILIBRADA (ACTO II) --- */
+        /* --- MAQUETACIÓN ASIMÉTRICA CON MEHRA EN FILTRO (ACTO II) --- */
         .layout-asymmetric {
             display: flex;
             align-items: center;
             justify-content: space-between;
             width: 100%;
             max-width: 1200px;
-            gap: 4rem;
+            gap: 5rem;
         }
 
         .text-container-safe {
@@ -184,18 +183,19 @@
         }
 
         .svg-wrapper {
-            width: 250px;
-            height: 350px;
+            width: 300px;
+            height: 380px;
             display: flex;
             align-items: center;
             justify-content: center;
             opacity: 0;
             transform: scale(0.95);
             transition: all 2.5s cubic-bezier(0.16, 1, 0.3, 1) 0.4s;
+            filter: drop-shadow(0 0 15px rgba(223, 186, 107, 0.15)); /* Sofisticado halo de luz */
         }
 
         .act-active .svg-wrapper {
-            opacity: 0.6;
+            opacity: 0.75;
             transform: scale(1);
         }
 
@@ -203,9 +203,9 @@
             stroke: var(--gold-antique);
             stroke-width: 0.8;
             fill: none;
-            stroke-dasharray: 1200;
-            stroke-dashoffset: 1200;
-            transition: stroke-dashoffset 4s cubic-bezier(0.16, 1, 0.3, 1) 0.5s;
+            stroke-dasharray: 2000;
+            stroke-dashoffset: 2000;
+            transition: stroke-dashoffset 4.5s cubic-bezier(0.16, 1, 0.3, 1) 0.5s;
         }
 
         .act-active .flower-path { stroke-dashoffset: 0; }
@@ -237,7 +237,7 @@
 
         /* --- ARTEFACTO INTERACTIVO DE CIERRE (3D FLIP CARD) --- */
         .interactive-portal {
-            perspective: 1200px; /* Habilita el entorno tridimensional */
+            perspective: 1200px;
             width: 260px;
             height: 350px;
             margin: 3.5rem auto 0 auto;
@@ -253,7 +253,6 @@
             box-shadow: 0 0 30px rgba(0,0,0,0.5);
         }
 
-        /* Al añadir esta clase con JS, el elemento rotará elegantemente */
         .interactive-portal.flipped .card-structure {
             transform: rotateY(180deg);
         }
@@ -262,7 +261,7 @@
             position: absolute;
             width: 100%;
             height: 100%;
-            backface-visibility: hidden; /* Oculta el reverso mientras gira */
+            backface-visibility: hidden;
             border: 1px solid var(--gold-antique);
             padding: 12px;
             background: rgba(8, 6, 18, 0.75);
@@ -278,7 +277,7 @@
         .photo-canvas {
             width: 100%;
             height: 100%;
-            background: linear-gradient(135deg, #0f111a, #07080d); /* Reemplazar con URL de imagen */
+            background: linear-gradient(135deg, #0f111a, #07080d);
             background-size: cover;
             background-position: center;
             border: 1px solid rgba(223, 186, 107, 0.2);
@@ -289,7 +288,6 @@
             filter: contrast(110%) brightness(105%);
         }
 
-        /* Reverso del artefacto: El Mensaje Secreto */
         .card-back {
             transform: rotateY(180deg);
             display: flex;
@@ -386,7 +384,7 @@
         }
         .audio-label { font-size: 0.65rem; letter-spacing: 2px; text-transform: uppercase; color: var(--text-muted); }
 
-        /* --- ESTILO DE NOTAS FLOTANTES DE BLACKPINK --- */
+        /* --- LETRAS DE MÚSICA SINCRO --- */
         .music-whisper-box {
             position: fixed;
             bottom: 6rem;
@@ -435,7 +433,7 @@
             .cursor-dot, .cursor-aura { display: none; }
             .layout-asymmetric { flex-direction: column; justify-content: center; gap: 2rem; }
             .text-container-safe { max-width: 100%; text-align: center; }
-            .svg-wrapper { height: 180px; width: 100%; }
+            .svg-wrapper { height: 260px; width: 100%; }
             .editorial-title { font-size: 2.2rem; text-align: center; }
             .line-reveal { font-size: 1.1rem; text-align: center; padding-right: 0; }
             .climax-phrase { font-size: 1.8rem; margin: 2.5rem 0; }
@@ -497,10 +495,17 @@
             </div>
 
             <div class="svg-wrapper">
-                <svg viewBox="0 0 120 240" width="100%" height="100%">
-                    <path class="flower-path" d="M60,230 Q55,150 62,100 Q35,80 58,55 Q80,80 62,100 Q62,55 45,35 Q60,10 75,35 Q60,55 62,100" />
-                    <path class="flower-path" d="M59,175 Q35,165 50,145" />
-                    <path class="flower-path" d="M61,140 Q85,130 68,110" />
+                <svg viewBox="0 0 160 260" width="100%" height="100%">
+                    <path class="flower-path" d="M80,240 Q76,170 81,115" />
+                    <path class="flower-path" d="M79,185 Q45,175 62,150 Q76,165 79,185" />
+                    <path class="flower-path" d="M81,160 Q115,145 98,120 Q84,140 81,160" />
+                    <path class="flower-path" d="M55,110 C50,135 110,135 105,110" />
+                    <path class="flower-path" d="M55,110 C25,95 30,65 62,70 C70,72 75,82 81,92" />
+                    <path class="flower-path" d="M105,110 C135,95 130,65 98,70 C90,72 85,82 81,92" />
+                    <path class="flower-path" d="M58,82 C42,50 72,40 81,65" />
+                    <path class="flower-path" d="M104,82 C120,50 90,40 81,65" />
+                    <path class="flower-path" d="M68,92 C63,75 74,70 81,80 C88,70 99,75 94,92 C88,102 74,102 68,92" />
+                    <path class="flower-path" d="M73,86 C70,80 92,80 89,86" />
                 </svg>
             </div>
         </div>
@@ -693,34 +698,21 @@
         const whisperUi = document.getElementById('whisper-ui');
         const whisperCurrent = document.getElementById('whisper-current');
 
-        // Mapa automático de tiempos optimizado con tu mapeo de marcas de tiempo personalizado
         const jennieJazzLyrics = [
             { start: 9, end: 17, text: "You know I gotcha. You know that I got you like that. Ain’t nobody gonna have your back like the way I do. You love it just say you do." },
             { start: 17, end: 27, text: "You know you got me. Everything you do, everything you did, everything I wish I was with, makes me feel alright. I'm just saying so." },
             { start: 28, end: 38, text: "I really like it. Nothing in the world can make me feel the way you do the things you do." },
             { start: 38, end: 48, text: "I really like it. Nothing in the world can make me feel the way you do the things you do." },
-            
-            // Primer Bloque de Coro + Bis
             { start: 48, end: 56, text: "I love you and me dancing in the moonlight. Nobody can see, it’s just you and me tonight." },
             { start: 56, end: 66, text: "I love you and me dancing in the moonlight. Nobody can see, it’s just you and me tonight." },
-            
-            // Primer Bloque de Rap/Post-coro + Bis
             { start: 66, end: 71, text: "Look at you now look at me. How you ever ever gonna find someone like this?" },
             { start: 71, end: 77, text: "Look at you now look at me. How you ever ever gonna find someone like this?" },
-            
-            // Estrofas intermedias
             { start: 77, end: 86, text: "You’re the reason my heart skips drops. Just a little touch my world stops. Finally I know that you’re mine." },
             { start: 86, end: 95, text: "I don’t want to fall, don’t wanna play this game of love oh eh oh. There’s nowhere to hide." },
-            
-            // Repetición Pre-Coro
             { start: 96, end: 106, text: "I really like it. Nothing in the world can make me feel the way you do the things you do." },
             { start: 106, end: 116, text: "I really like it. Nothing in the world can make me feel the way you do the things you do." },
-            
-            // Segundo Bloque de Coro + Bis
             { start: 116, end: 122, text: "I love you and me dancing in the moonlight. Nobody can see, it’s just you and me tonight." },
             { start: 122, end: 133, text: "I love you and me dancing in the moonlight. Nobody can see, it’s just you and me tonight." },
-            
-            // Outro Final + Bis alternado
             { start: 133, end: 138, text: "Look at you now look at me. How you ever ever gonna find someone like this?" },
             { start: 138, end: 148, text: "Look at you now look at me. How you ever ever gonna find someone like me." }
         ];
@@ -731,7 +723,6 @@
             document.getElementById('act2').scrollIntoView({ behavior: 'smooth' });
         });
 
-        // Servomotor en tiempo real acoplado al reloj interno de tu pista MP3 local
         audioTrack.addEventListener('timeupdate', () => {
             const currentTime = audioTrack.currentTime;
             const activeLine = jennieJazzLyrics.find(line => currentTime >= line.start && currentTime <= line.end);
@@ -746,7 +737,7 @@
             }
         });
 
-        // 4. Interacción del Bloque Dorado Tridimensional (Portal Secreto)
+        // 4. Interacción del Portal Tridimensional
         const portal = document.getElementById('romantic-portal');
         portal.addEventListener('click', () => {
             portal.classList.toggle('flipped');
@@ -764,7 +755,7 @@
             aura.style.backgroundColor = 'transparent';
         });
 
-        // 5. Fragmentación de Palabras Cinéticas de Alta Sensibilidad (Acto IV)
+        // 5. Palabras Cinéticas (Acto IV)
         const kineticSpans = document.querySelectorAll('.js-kinetic');
         kineticSpans.forEach(span => {
             const rawText = span.innerText;
@@ -792,7 +783,7 @@
             });
         }, 150);
 
-        // 6. Intersection Observer de Alta Estabilidad para Control de Actos
+        // 6. Intersection Observer para Control de Actos
         const actOptions = { root: null, threshold: 0.35, rootMargin: "0px" };
         const actObserver = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
